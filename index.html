@@ -424,7 +424,8 @@ function render(){
   clearInterval(timer);
   const typing=document.activeElement&&document.activeElement.id==="nick";
   app.replaceChildren(garland(), ...(S.screen==="play"?viewPlay():S.screen==="turn"?viewTurn():S.screen==="result"?viewResult():viewHome()).filter(Boolean));
-  if(S.screen==="turn"){ const b=document.getElementById("next"); if(b) b.focus({preventScroll:true}); window.scrollTo(0,0); }
+  if(S.screen==="turn"){ window.scrollTo(0,0); if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+    setTimeout(()=>{ const b=document.getElementById("next"); if(b&&S.screen==="turn") b.focus({preventScroll:true}); },650); }
   if(S.screen==="play") startTimer();
   if(typing){ const n=document.getElementById("nick"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } }
 }
@@ -442,7 +443,7 @@ function viewHome(){
   const nick=el("input",{type:"text",id:"nick",maxlength:"20",autocomplete:"nickname",placeholder:"e.g. Baozi Boss"});
   nick.value=S.nick;
   nick.addEventListener("input",e=>{ S.nick=e.target.value; if(S.nickErr){ S.nickErr=false; const w=document.getElementById("nickwarn"); if(w) w.remove(); } });
-  nick.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.isComposing) begin(); });
+  nick.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.isComposing){ e.preventDefault(); if(!e.repeat) begin(); } });
   return [
     mast("Day "+DAY),
     el("section",{class:"panel"},
@@ -471,7 +472,7 @@ function viewHome(){
 function viewPlay(){
   const q=Q[S.qi];
   const input=el("input",{type:"text",id:"answer",autocomplete:"off",autocapitalize:"off",spellcheck:"false",maxlength:"50",placeholder:"Type one answer","aria-label":q.p});
-  input.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.isComposing) submit(); });
+  input.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.isComposing){ e.preventDefault(); if(!e.repeat) submit(); } });
   setTimeout(()=>input.focus(),0);
   return [
     mast("Day "+DAY),
@@ -511,7 +512,7 @@ function submit(){
   S.per[S.qi]=pts;
   let tip="";                                 // if not a Legend answer, show one that was
   if(level<5){ const best=[...LEVEL[S.qi].entries()].filter(e=>e[1]===5).map(e=>e[0]); if(best.length){ const n=best[Math.floor(Math.random()*best.length)], r=INDEX[S.qi].get(norm(n)); tip=n+(r&&r.note&&norm(r.note)!==norm(n)?` (${r.note})`:""); } }
-  S.turn={qi:S.qi, ok, raw, pts, level, others, before, tip, name: rec?rec.name:raw, note: rec?rec.note:""};
+  S.turn={qi:S.qi, ok, raw, pts, level, others, before, tip, at:Date.now(), name: rec?rec.name:raw, note: rec?rec.note:""};
   S.screen="turn"; render(); Music.sfx(level);
 }
 const metres=pts=>Math.round(pts*10).toLocaleString("en-US");
@@ -538,7 +539,9 @@ function viewTurn(){ // the score for this answer, and the wall so far
       el("button",{class:"btn",id:"next",onclick:nextTurn}, last?"See my result >":"Next question >"))
   ];
 }
-function nextTurn(){ if(S.qi<Q.length-1){ S.qi++; S.screen="play"; render(); } else finish(); }
+function nextTurn(){
+  if(S.turn && Date.now()-S.turn.at<600) return;     // ignore an accidental double press
+  if(S.qi<Q.length-1){ S.qi++; S.screen="play"; render(); } else finish(); }
 function finish(){
   S.mine={v:2,day:DAY,a:S.a.slice(),raw:S.raw.slice(),t:Date.now(),name:S.nick.trim().slice(0,20)||"Player"};
   try{ localStorage.setItem(LS,JSON.stringify(S.mine)); }catch(e){}
