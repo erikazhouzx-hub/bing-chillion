@@ -39,6 +39,22 @@ h1{font-size:18px} h2{font-size:15px} h3{font-size:12px}
 .mus:focus-visible{outline:4px solid var(--jade);outline-offset:4px}
 .scene{margin:4px;line-height:0;box-shadow:0 -4px 0 0 var(--gold),0 4px 0 0 var(--gold),-4px 0 0 0 var(--gold),4px 0 0 0 var(--gold)}
 .scene canvas{width:100%;height:auto;image-rendering:pixelated}
+.scene{position:relative}
+.wallwrap{display:flex;flex-direction:column;gap:12px}
+.meter{position:absolute;right:10px;top:8px;text-align:right;font-family:var(--px);font-size:15px;line-height:1.5;color:var(--paper);text-shadow:2px 2px 0 #0b0717}
+.meter small{display:block;font-size:9px;color:var(--gold)}
+.wallbar{height:14px;margin:4px;background:var(--tile);position:relative;overflow:hidden;
+  box-shadow:0 -4px 0 0 var(--paper),0 4px 0 0 var(--paper),-4px 0 0 0 var(--paper),4px 0 0 0 var(--paper)}
+.wallbar i{display:block;height:100%;width:100%;background:var(--gold);transform-origin:left;transform:scaleX(0)}
+.wallbar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(100%/7 - 3px),var(--night) calc(100%/7 - 3px) calc(100%/7))}
+/* how everyone did: one bar per 500 m of wall */
+.dist{display:flex;align-items:flex-end;gap:2px;height:110px;border-bottom:4px solid var(--ink)}
+.col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;cursor:pointer;min-width:0}
+.col i{display:block;width:100%;background:#6b5fb0}
+.col.me i{background:var(--red)}
+.col:focus-visible{outline:3px solid var(--jade);outline-offset:1px}
+.you{font-family:var(--px);font-size:7px;line-height:1.2;color:var(--ink)}
+.axis{display:flex;justify-content:space-between}
 .pts.big{font-size:18px}
 .lv{font-family:var(--px);font-size:8px;line-height:1.4;text-transform:uppercase;padding:4px 6px;white-space:nowrap;color:var(--paper);background:var(--dim)}
 .lv.l2{background:#3f7d6a}.lv.l3{background:#2b6cb0}.lv.l4{background:#7b3fb3}.lv.l5{background:var(--red)}
@@ -314,7 +330,7 @@ function wallY(x){
   for(let i=0;i<NODES.length-1;i++){ const [x0,y0]=NODES[i],[x1,y1]=NODES[i+1]; if(x>=x0&&x<=x1) return y0+(y1-y0)*(x-x0)/(x1-x0); }
   return x<NODES[0][0]?NODES[0][1]:NODES[NODES.length-1][1];
 }
-function drawWall(c,p,frame){ // p = towers built so far (0 to 7)
+function drawWall(c,p,frame,busy){ // p = towers built so far (0 to 7); busy = currently building
   const W=120,H=76,px=(col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(x,y,w||1,h||1);};
   px("#1a1330",0,0,W,H); px("#231a44",0,20,W,H); px("#2c2154",0,36,W,H);                       // night sky
   [[30,6],[52,12],[70,5],[88,10],[104,4],[42,22],[8,26],[60,26]].forEach(([x,y])=>px("#b9add9",x,y));
@@ -336,19 +352,24 @@ function drawWall(c,p,frame){ // p = towers built so far (0 to 7)
   px("#f2b632",x-1,y-5,3,1); px("#ffd9a8",x,y-4); px("#d7261e",x-1,y-3,3,2);
   if(frame%2){ px("#1d1424",x-1,y-1); px("#1d1424",x+1,y-1); px("#e0cfae",x+2,y-3,2,2); }        // carrying a brick
   else { px("#1d1424",x,y-1); px("#e0cfae",x+2,y-2,2,2); }
+  if(busy){ px("#ffe08a",x+4,y-5-(frame%3)); px("#f2b632",x-3,y-4-((frame+1)%3)); px("#fff3d6",x+3,y-(frame%2)); }   // sparks and dust
 }
-function wallScene(from,to){ // a picture of the wall; it grows from "from" to "to"
+function wallScene(from,to){ // a picture of the wall; it grows from "from" to "to" while the metres count up
   const cv=document.createElement("canvas"); cv.width=120; cv.height=76;
   cv.setAttribute("role","img"); cv.setAttribute("aria-label",`Great Wall built: ${Math.round(to*1000)} of 7000 metres`);
-  const c=cv.getContext("2d"), still=from===to||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
-  if(still){ drawWall(c,to,0); }
-  else{ const t0=performance.now(), dur=500+900*Math.abs(to-from); let last=-1;
-    const tick=now=>{ if(!cv.isConnected&&now-t0>200) return;
-      const k=Math.min((now-t0)/dur,1), fr=Math.floor((now-t0)/120);
-      if(fr!==last||k===1){ last=fr; drawWall(c,from+(to-from)*k,k===1?0:fr); }
+  const c=cv.getContext("2d"), num=el("span",null,""), gain=Math.round((to-from)*1000);
+  const meter=el("div",{class:"meter","aria-hidden":"true"},num,gain>0?el("small",null,"+"+gain.toLocaleString("en-US")+" m"):null);
+  const fill=el("i"), bar=el("div",{class:"wallbar","aria-hidden":"true"},fill);
+  const show=(p,frame,busy)=>{ drawWall(c,p,frame,busy); num.textContent=Math.round(p*1000).toLocaleString("en-US")+" m"; fill.style.transform=`scaleX(${p/7})`; };
+  const still=from===to||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if(still) show(to,0,false);
+  else{ const t0=performance.now()+350, dur=900+1600*Math.abs(to-from); let last=-1;      // a short pause, then build
+    const tick=now=>{ if(!cv.isConnected&&now-t0>400) return;
+      const k=Math.max(0,Math.min((now-t0)/dur,1)), fr=Math.floor(Math.max(0,now-t0)/110);
+      if(fr!==last||k===1){ last=fr; show(from+(to-from)*k,k===1?0:fr,k>0&&k<1); }
       if(k<1) requestAnimationFrame(tick); };
-    drawWall(c,from,0); requestAnimationFrame(tick); }
-  return el("div",{class:"scene"},cv);
+    show(from,0,false); requestAnimationFrame(tick); }
+  return el("div",{class:"wallwrap"},el("div",{class:"scene"},cv,meter),bar);
 }
 
 // ---- Background music: an original festive loop, made by the browser (no audio file). ----
@@ -561,6 +582,29 @@ async function load(){ // read everyone's plays for today
   S.sig=sig;
 }
 
+function distChart(rows,me){ // how many players built how much wall (one bar per 500 m)
+  const B=14, size=7000/B, counts=Array(B).fill(0), wall=r=>Math.round(r.score*Q.length*10), n=rows.length;
+  let mine=-1, myWall=0;
+  rows.forEach(r=>{ const k=Math.min(B-1,Math.floor(wall(r)/size)); counts[k]++; if(r.id===me){ mine=k; myWall=wall(r); } });
+  const max=Math.max(...counts,1), beaten=rows.filter(r=>r.id!==me&&wall(r)<myWall).length;
+  const label=k=>`${(k*size).toLocaleString("en-US")} to ${(k===B-1?7000:(k+1)*size-1).toLocaleString("en-US")} m: ${counts[k]} ${counts[k]===1?"player":"players"}`+(k===mine?" (you are here)":"");
+  const info=el("p",{class:"lbl","aria-live":"polite"},`Tallest bar: ${max} ${max===1?"player":"players"}. Tap a bar for details`);
+  const cols=counts.map((c,k)=>{
+    const col=el("div",{class:"col"+(k===mine?" me":""),tabindex:"0",role:"img","aria-label":label(k)},
+      k===mine?el("span",{class:"you"},"YOU"):null, el("i",{style:`height:${c?Math.max(8,Math.round(c/max*82)):0}%`}));
+    const show=()=>{ info.textContent=label(k); };
+    col.addEventListener("pointerenter",show); col.addEventListener("focus",show); col.addEventListener("click",show);
+    return col; });
+  const line= n<2 ? "You're the first player today. This chart fills in as friends play."
+                  : `You built more wall than ${beaten} of the ${n-1} other ${n-1===1?"player":"players"}.`;
+  return el("section",{class:"sec"},
+    el("h3",null,el("span",null,"How everyone did"),el("span",{class:"lbl gold"},`${n} ${n===1?"player":"players"}`)),
+    el("div",{class:"panel qa"},el("p",{style:"font-size:15px"},line),
+      el("div",{class:"dist"},cols),
+      el("div",{class:"axis"},el("span",{class:"lbl"},"0 m"),el("span",{class:"lbl"},"3,500 m"),el("span",{class:"lbl"},"7,000 m")),
+      info));
+}
+
 function viewResult(){
   const plays=allPlays(), {counts,rows}=compute(plays), me=myId();
   const idx=rows.findIndex(r=>r.id===me), row=rows[idx], mine=plays.find(p=>p.id===me);
@@ -587,6 +631,7 @@ function viewResult(){
       }},"Copy my result as text"),
       el("p",{class:"lbl soft center"},"Want an image? Screenshot the card"))
   ];
+  out.push(distChart(rows,me));
   // The reveal
   const sec=el("section",{class:"sec"},el("h3",null,el("span",null,"The reveal"),pixelText("答案揭秘",16,"#f2b632",1)));
   Q.forEach((q,i)=>{
