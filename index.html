@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>China Index 中国浓度</title>
+<title>Bing Chillion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=Pixelify+Sans:wght@400;500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -28,7 +28,12 @@ h1{font-size:18px} h2{font-size:15px} h3{font-size:12px}
 .panel .lbl{color:var(--dim)}
 .lbl.gold{color:var(--gold)} .lbl.red{color:var(--red)} .lbl.soft{color:var(--soft)}
 .center{text-align:center}
+.mast{flex-wrap:wrap}
 .mastr{display:flex;align-items:center;gap:10px}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--px);font-size:10px;line-height:1.4;color:var(--paper)}
+.title{font-family:var(--px);font-size:26px;line-height:1.35;color:var(--red);text-shadow:3px 3px 0 var(--gold);display:flex;flex-direction:column;gap:2px}
+.title span{display:flex;align-items:center;gap:10px}
+@media (max-width:380px){.title{font-size:21px}}
 .mus{font-family:var(--px);font-size:8px;line-height:1.5;text-transform:uppercase;border:0;border-radius:0;padding:6px;cursor:pointer;background:var(--gold);color:var(--night)}
 .mus[aria-pressed="false"]{background:var(--edge);color:var(--paper)}
 .mus:focus-visible{outline:4px solid var(--jade);outline-offset:4px}
@@ -204,7 +209,7 @@ function el(tag, attrs, ...kids){
 }
 
 // ---- Pixel art. Each letter is one coloured square; "." is empty. ----
-const PAL={r:"#d7261e",R:"#ff7a5c",d:"#9e1510",y:"#f2b632",Y:"#ffe08a",D:"#b07c12",k:"#6b4a2b",c:"#fff3d6",g:"#cdbb9a",s:"#e6d5b0",b:"#3ec6c0",t:"#d9b38c",j:"#2fa37a"};
+const PAL={r:"#d7261e",R:"#ff7a5c",d:"#9e1510",y:"#f2b632",Y:"#ffe08a",D:"#b07c12",k:"#6b4a2b",c:"#fff3d6",g:"#cdbb9a",s:"#e6d5b0",b:"#3ec6c0",t:"#d9b38c",j:"#2fa37a",p:"#ff8fab",P:"#ffc2d1",q:"#e0607e"};
 const SPR={
   lantern:[".....kk.....",".....kk.....","...yyyyyy...","..rrrrrrrr..",".rRrrrrrrrr.","rRRrrrrrrrrd","rRrrryyrrrrd","rRrrryyrrrrd","rrrrryyrrrdd","rrrrrrrrrrdd",".rrrrrrrrdd.","..rrrrrrdd..","...yyyyyy...","....yDDy....",".....yy.....","....y..y....","....y..y....","....y..y...."],
   baozi:["....cccc....","..ccgccgcc..",".cccgccgccc.","cccccggccccc","cccccccccccc","cccccccccccc","sccccccccccs",".sscccccccs.","..ssssssss.."],
@@ -213,6 +218,7 @@ const SPR={
   pagoda:[".....y.....",".....r.....","...rrrrr...","..rrrrrrr..","....ccc....","..rrrrrrr..",".rrrrrrrrr.","....ccc....",".rrrrrrrrr.","rrrrrrrrrrr","...ccccc...","...cckcc...","...cckcc..."],
   tanghulu:["..t..",".rrr.","rRrrr","rrrrd",".rdd.",".rrr.","rRrrr","rrrrd",".rdd.",".rrr.","rRrrr","rrrrd",".rdd.","..t..","..t..","..t.."],
   cracker:["...Y.","..y..","..k..","yyyyy","rrrrr","rRrrd","rRrrd","ryyyd","rRrrd","rRrrd","rrrrd","yyyyy"],
+  icecream:["...r...","..ppp..",".pPppp.","pPppppp","ppppppq","pppppqq","ttttttt",".tktkt.",".ttktt.","..tkt..","..ttt..","...t..."],
   coin:["..yyyyy..",".yYYyyyy.","yYyyyyyyy","yYy...yyD","yyy...yyD","yyy...yyD","yyyyyyyDD",".yyyyDDD.","..yDDDD.."]
 };
 const ICONS=["baozi","phone","tv","pagoda","tanghulu","cracker","coin"];
@@ -243,39 +249,42 @@ function pixelText(text, size, color, scale, shadow){
 const seal=chars=>el("div",{class:"seal"},pixelText(chars,18,"#fff3d6",2));
 const garland=()=>el("div",{class:"garland","aria-hidden":"true"},
   [6,24,12,28,4].map((h,i)=>el("div",{class:"lan",style:`--h:${h}px;animation-delay:${-i*0.5}s`},sprite("lantern",3))));
-const mast=right=>el("header",{class:"mast"},pixelText("中国浓度",18,"#fff3d6",1),
+const mast=right=>el("header",{class:"mast"},el("div",{class:"logo"},sprite("icecream",2),el("span",null,"BING CHILLION")),
   el("div",{class:"mastr"},el("span",{class:"lbl gold"},right),
     el("button",{class:"mus",id:"mus","aria-pressed":String(S.music),onclick:toggleMusic},S.music?"Music on":"Music off")));
 
-// ---- The Great Wall climb. 100 points = one watchtower. 7 questions = 7 towers = 700 steps. ----
+// ---- Building the Great Wall. 100 points = 1,000 m of wall = one watchtower. 7 questions = 7 towers = 7,000 m. ----
 const NODES=[[6,66],[20,60],[34,55],[48,47],[62,42],[76,33],[92,26],[110,14]];   // start + 7 towers, in scene pixels
 function wallY(x){
   for(let i=0;i<NODES.length-1;i++){ const [x0,y0]=NODES[i],[x1,y1]=NODES[i+1]; if(x>=x0&&x<=x1) return y0+(y1-y0)*(x-x0)/(x1-x0); }
   return x<NODES[0][0]?NODES[0][1]:NODES[NODES.length-1][1];
 }
-function drawWall(c,p,frame){ // p = towers climbed so far (0 to 7)
+function drawWall(c,p,frame){ // p = towers built so far (0 to 7)
   const W=120,H=76,px=(col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(x,y,w||1,h||1);};
   px("#1a1330",0,0,W,H); px("#231a44",0,20,W,H); px("#2c2154",0,36,W,H);                       // night sky
   [[30,6],[52,12],[70,5],[88,10],[104,4],[42,22],[8,26],[60,26]].forEach(([x,y])=>px("#b9add9",x,y));
   px("#ffe08a",13,7,8,6); px("#ffe08a",14,6,6,8);                                               // moon
   for(let x=0;x<W;x++){ const h=Math.round(9+8*Math.abs(Math.sin(x/17))+5*Math.abs(Math.sin(x/7+1))); px("#3a2c6b",x,50-h,1,H); }   // far mountains
   for(let x=0;x<W;x++){ const y=Math.round(wallY(x)); px("#1f4a3d",x,y+3,1,H); px("#183b31",x,y+13,1,H); px("#112b25",x,y+26,1,H); } // the ridge
-  for(let x=NODES[0][0];x<W;x++){ const y=Math.round(wallY(x)); px("#bfa98a",x,y,1,3); px("#7d6a55",x,y+3); if(x%3!==2) px("#e0cfae",x,y-1); } // the wall
+  const seg=Math.min(Math.floor(p+1e-6),6), f=Math.min(p-seg,1);                                 // where the wall ends
+  const bx=Math.round(NODES[seg][0]+(NODES[seg+1][0]-NODES[seg][0])*f);
+  for(let x=NODES[0][0];x<W;x++){ const y=Math.round(wallY(x));
+    if(x<=bx){ px("#bfa98a",x,y,1,3); px("#7d6a55",x,y+3); if(x%3!==2) px("#e0cfae",x,y-1); }    // built wall
+    else if(x<=NODES[7][0] && x%3===0) px("#4f8a74",x,y+1); }                                    // dotted plan for the rest
   px("#bfa98a",3,61,7,8); px("#5c4a3a",5,65,3,4); px("#d7261e",3,60,7,1);                        // start gate
-  NODES.slice(1).forEach(([tx,ty],i)=>{ const lit=p>=i+1-1e-6;                                   // watchtowers
-    px("#cdb893",tx-3,ty-7,7,10); px("#e0cfae",tx-4,ty-8,9,1); [-4,-2,0,2,4].forEach(d=>px("#e0cfae",tx+d,ty-9));
-    px(lit?"#f2b632":"#5c4a3a",tx-1,ty-5,2,2); px("#5c4a3a",tx-1,ty,2,3);
-    if(lit){ px("#6b4a2b",tx,ty-14,1,5); px("#d7261e",tx+1,ty-14,3,2); } });
-  const seg=Math.min(Math.floor(p+1e-6),6), f=Math.min(p-seg,1);                                 // the climber
-  const x=Math.round(NODES[seg][0]+(NODES[seg+1][0]-NODES[seg][0])*f);
-  let y=Math.round(wallY(x))-1;
-  NODES.slice(1).forEach(([tx,ty])=>{ if(Math.abs(x-tx)<=4) y=ty-9; });
+  NODES.slice(1).forEach(([tx,ty],i)=>{                                                          // watchtowers
+    if(p>=i+1-1e-6){ px("#cdb893",tx-3,ty-7,7,10); px("#e0cfae",tx-4,ty-8,9,1); [-4,-2,0,2,4].forEach(d=>px("#e0cfae",tx+d,ty-9));
+      px("#f2b632",tx-1,ty-5,2,2); px("#5c4a3a",tx-1,ty,2,3); px("#6b4a2b",tx,ty-14,1,5); px("#d7261e",tx+1,ty-14,3,2); }
+    else { px("#4f8a74",tx,ty-3,1,4); px("#4f8a74",tx-1,ty-4,3,1); } });                         // a stake where a tower will go
+  const x=bx; let y=Math.round(wallY(x))-1;                                                      // the builder
+  NODES.slice(1).forEach(([tx,ty],i)=>{ if(p>=i+1-1e-6 && Math.abs(x-tx)<=4) y=ty-9; });
   px("#f2b632",x-1,y-5,3,1); px("#ffd9a8",x,y-4); px("#d7261e",x-1,y-3,3,2);
-  if(frame%2){ px("#1d1424",x-1,y-1); px("#1d1424",x+1,y-1); } else { px("#1d1424",x,y-1); }
+  if(frame%2){ px("#1d1424",x-1,y-1); px("#1d1424",x+1,y-1); px("#e0cfae",x+2,y-3,2,2); }        // carrying a brick
+  else { px("#1d1424",x,y-1); px("#e0cfae",x+2,y-2,2,2); }
 }
-function wallScene(from,to){ // a picture of the climb; walks from "from" to "to"
+function wallScene(from,to){ // a picture of the wall; it grows from "from" to "to"
   const cv=document.createElement("canvas"); cv.width=120; cv.height=76;
-  cv.setAttribute("role","img"); cv.setAttribute("aria-label",`Great Wall climb: ${Math.round(to*100)} of 700 steps`);
+  cv.setAttribute("role","img"); cv.setAttribute("aria-label",`Great Wall built: ${Math.round(to*1000)} of 7000 metres`);
   const c=cv.getContext("2d"), still=from===to||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
   if(still){ drawWall(c,to,0); }
   else{ const t0=performance.now(), dur=500+900*Math.abs(to-from); let last=-1;
@@ -358,10 +367,11 @@ function viewHome(){
   return [
     mast("Day "+DAY),
     el("section",{class:"panel"},
-      el("div",{class:"row2"},pixelText("中国浓度",22,"#d7261e",2,"#f2b632"),seal("浓度")),
-      el("span",{class:"lbl red"},"China Index · Today's challenge"),
-      el("h1",null,"How deep does your China go?"),
-      el("p",null,`${Q.length} questions. ${SECS} seconds each. The fewer people share your answer, the more you score.`)),
+      el("div",{class:"row2"},el("div",{class:"title",role:"img","aria-label":"Bing Chillion"},
+          el("span",null,"BING",sprite("icecream",3)),el("span",null,"CHILLION")),seal("浓度")),
+      el("span",{class:"lbl red"},"Today's challenge"),
+      el("h1",null,"How long a Great Wall can you build?"),
+      el("p",null,`${Q.length} questions. ${SECS} seconds each. The fewer people share your answer, the more wall you build.`)),
     S.mine?null:el("div",{class:"field"},
       el("label",{class:"lbl gold",for:"nick"},"Your nickname (shown on the leaderboard)"),
       nick,
@@ -420,7 +430,8 @@ function submit(){
   S.turn={qi:S.qi, ok, raw, pts, others, before, name: rec?rec.name:raw, note: rec?rec.note:""};
   S.screen="turn"; render();
 }
-function viewTurn(){ // the score for this answer, and the climb so far
+const metres=pts=>Math.round(pts*10).toLocaleString("en-US");
+function viewTurn(){ // the score for this answer, and the wall so far
   const t=S.turn, total=t.before+t.pts, last=t.qi===Q.length-1;
   let line;
   if(t.ok) line= t.others===0 ? (S.online?"Nobody else has said this yet. Full points!":"Full points for now. Other players' answers can't be reached right now.")
@@ -438,7 +449,7 @@ function viewTurn(){ // the score for this answer, and the climb so far
       el("h2",null, t.ok||t.note ? t.name : (t.raw?`"${t.raw}"`:"No answer")),
       zh?el("p",null,zh):null,
       el("p",null,line+(t.ok?" Points can still change as more people play.":"")),
-      el("div",{class:"rank"},el("span",{class:"lbl"},"Climbed so far"),el("strong",null,`${Math.round(total)} / 700 steps`)),
+      el("div",{class:"rank"},el("span",{class:"lbl"},"Wall built so far"),el("strong",null,`${metres(total)} m of 7,000 m`)),
       el("button",{class:"btn",id:"next",onclick:nextTurn}, last?"See my result >":"Next question >"))
   ];
 }
@@ -491,15 +502,15 @@ function viewResult(){
   const idx=rows.findIndex(r=>r.id===me), row=rows[idx], mine=plays.find(p=>p.id===me);
   const t=tierOf(row.score), n=rows.length, score=row.score.toFixed(1);
   const rankText= n>1 ? `No. ${idx+1} of ${n}` : "First player in";
-  const steps=Math.round(row.score*Q.length), towers=Math.floor(steps/100+1e-6);
+  const pts=row.score*Q.length, towers=Math.floor(pts/100+1e-6);
   const out=[ mast("Day "+DAY),
-    wallScene(steps/100,steps/100),
+    wallScene(pts/100,pts/100),
     el("section",{class:"panel"},
       el("div",{class:"row2"},el("span",{class:"lbl"},"My China concentration"),seal(t[2])),
       el("div",{class:"score"},score),
       el("h2",null,t[1]),
       el("p",null,t[3]),
-      el("div",{class:"rank"},el("span",{class:"lbl"},"Great Wall climb"),el("strong",null,`${steps} / 700 steps · ${towers} of 7 towers`)),
+      el("div",{class:"rank"},el("span",{class:"lbl"},"Great Wall built"),el("strong",null,`${metres(pts)} m · ${towers} of 7 towers`)),
       el("div",{class:"rank"},el("span",{class:"lbl"},"Today's rank"),el("strong",null,rankText))),
     el("p",{class:"note"}, n<5 ? "Only a few people have played, so scores run high. As more friends play, scores update by themselves."
         : "This score is provisional. It updates as more people play."),
@@ -507,7 +518,7 @@ function viewResult(){
       el("p",{class:"note"},"Your score isn't on the leaderboard yet. Keep this page open; it will try again by itself.") : null,
     el("div",{class:"acts"},
       el("button",{class:"btn",id:"copy",onclick:async e=>{
-        const txt=`China Index 中国浓度 · Day ${DAY}: I scored ${score} (${t[1]}) and climbed ${steps} of 700 steps up the Great Wall. ${rankText}.`;
+        const txt=`Bing Chillion · Day ${DAY}: I scored ${score} (${t[1]}) and built ${metres(pts)} m of Great Wall. ${rankText}.`;
         try{ await navigator.clipboard.writeText(txt); e.target.textContent="Copied!"; }
         catch(err){ e.target.textContent="Couldn't copy. Screenshot instead"; }
       }},"Copy my result as text"),
