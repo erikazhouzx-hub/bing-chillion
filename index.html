@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>China Index 中国浓度</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,700;6..96,900&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Serif+SC:wght@900&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one narrow magazine column (phone width), numbered editions, ruled sections, one vermilion seal. */
+:root{
+  --paper:#f3eee2; --card:#fbf8f0; --ink:#1f1d1a; --muted:#6b655a;
+  --red:#cf3a1f; --gold:#9c7c36; --line:rgba(31,29,26,.18);
+  --display:"Bodoni Moda","Noto Serif SC",Georgia,serif;
+  --body:"IBM Plex Sans","Noto Sans SC","PingFang SC",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#181614; --card:#211e1b; --ink:#efe8d9; --muted:#a49c8d;
+    --red:#ea5533; --gold:#cba85c; --line:rgba(239,232,217,.2); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#181614; --card:#211e1b; --ink:#efe8d9; --muted:#a49c8d;
+  --red:#ea5533; --gold:#cba85c; --line:rgba(239,232,217,.2); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+#app{max-width:440px;margin:0 auto;padding:20px 20px 56px;display:flex;flex-direction:column;gap:24px;min-height:100vh;
+  border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.mast{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:10px}
+.mast b{font-family:"Noto Serif SC",serif;font-weight:900;font-size:20px;letter-spacing:.08em}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.12}
+h1{font-weight:900;font-size:48px;letter-spacing:-.01em}
+h2{font-weight:900;font-size:30px}
+h3{font-weight:700;font-size:20px}
+p{margin:0}
+.muted{color:var(--muted)}
+.hero{display:flex;flex-direction:column;gap:14px;position:relative;padding-top:8px}
+.seal{font-family:"Noto Serif SC",serif;font-weight:900;color:var(--red);border:3px solid var(--red);border-radius:6px;
+  width:64px;height:64px;display:grid;place-items:center;font-size:20px;line-height:1.1;text-align:center;transform:rotate(-7deg);letter-spacing:.05em;flex:none}
+.hero .seal{position:absolute;right:0;top:0}
+.hero h1{padding-right:60px}
+.btn{font:700 17px var(--body);border:0;border-radius:4px;padding:15px 20px;background:var(--red);color:#fff;cursor:pointer;width:100%;letter-spacing:.03em}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn:active{transform:translateY(1px)}
+.rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.rules li{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.rules .mono{color:var(--red);flex:none}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--gold);padding-left:10px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red);width:100%;transform-origin:left}
+.qhead{display:flex;justify-content:space-between;align-items:baseline}
+.chip{display:inline-block;font-size:13px;font-weight:700;border:1.5px solid var(--ink);padding:2px 10px;border-radius:99px;align-self:flex-start}
+.play{display:flex;flex-direction:column;gap:18px}
+.play h2{font-size:32px;min-height:108px}
+.secs{font-family:var(--mono);font-size:28px;color:var(--red);font-variant-numeric:tabular-nums}
+input[type=text]{width:100%;font:500 20px var(--body);padding:14px;border:1.5px solid var(--ink);border-radius:4px;background:var(--card);color:var(--ink)}
+.card{background:var(--card);border:2px solid var(--ink);padding:20px;display:flex;flex-direction:column;gap:10px;position:relative}
+.card .seal{position:absolute;right:16px;top:44px;width:72px;height:72px;font-size:22px}
+.score{font-family:var(--display);font-weight:900;font-size:88px;line-height:1;color:var(--red);font-variant-numeric:tabular-nums}
+.rank{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:10px;gap:12px}
+.rank strong{font-family:var(--mono);font-size:17px}
+.sec{display:flex;flex-direction:column;gap:12px}
+.sec>h3{border-bottom:2px solid var(--ink);padding-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.qa{display:flex;flex-direction:column;gap:6px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.qa .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.pts{font-family:var(--mono);font-size:14px;color:var(--red);flex:none}
+.pts.zero{color:var(--muted)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 56px 24px;gap:8px;align-items:center;font-size:14px}
+.row span:first-child{overflow-wrap:anywhere}
+.row .m{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.row .m i{display:block;height:100%;background:var(--gold)}
+.row.me{font-weight:700}.row.me .m i{background:var(--red)}
+.row .n{font-family:var(--mono);font-size:12px;text-align:right;color:var(--muted)}
+.tag{font-size:11px;font-weight:700;color:var(--red);border:1px solid var(--red);border-radius:3px;padding:0 4px;margin-left:6px;white-space:nowrap}
+.lb{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.lb .mono{color:var(--red)}
+.lb.me{font-weight:700}
+.lb span:nth-child(2){overflow-wrap:anywhere}
+.acts{display:flex;flex-direction:column;gap:10px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// ---------- 1. Game data (edit this part to change questions) ----------
+const DAY = "001", SECS = 30;
+// Each entry: Answer@Chinese note|other spelling|other spelling ; next entry ...
+// The Chinese note is accepted as an answer too. "!" in front marks a known wrong answer (its note explains why).
+const Q = [
+{c:"Chinese Stomach", p:"Name a Chinese breakfast food.", d:`Baozi@包子|bao|steamed bun|steamed buns|pork bun|meat bun|肉包|菜包; Xiaolongbao@小笼包|soup dumpling|soup dumplings|xiao long bao|xlb|小笼; Soy milk@豆浆|doujiang|soya milk|soybean milk|soy bean milk|dou jiang|tau huay chui; Youtiao@油条|fried dough stick|fried dough sticks|fried dough|you tiao|dough fritter|dough fritters|chinese cruller|chinese donut|you char kway|youzhagui; Congee@粥|porridge|rice porridge|zhou|jook|rice congee|白粥|稀饭; Century egg congee@皮蛋瘦肉粥|pidan congee|century egg and pork congee|preserved egg congee|century egg porridge; Millet porridge@小米粥|xiaomi zhou|millet congee; Eight treasure congee@八宝粥|babaozhou|eight treasure porridge; Mantou@馒头|steamed bread|plain steamed bun; Flower roll@花卷|huajuan|hua juan; Jianbing@煎饼果子|jian bing|chinese crepe|jianbing guozi|savory crepe|煎饼; Egg-filled pancake@鸡蛋灌饼|jidan guanbing|guanbing|灌饼; Hand-pulled pancake@手抓饼|shouzhuabing|shou zhua bing; Roujiamo@肉夹馍|rou jia mo|chinese burger|chinese hamburger; Hulatang@胡辣汤|hu la tang|spicy pepper soup|pepper soup; Tofu pudding@豆腐脑|douhua|doufunao|tofu brain|dou hua|tau huay|taufufa|tofu fa|soft tofu|豆花|豆腐花; Cheung fun@肠粉|changfen|rice noodle roll|rice noodle rolls|rice roll|rice rolls|chee cheong fun|cheong fun|chang fen; Hot dry noodles@热干面|reganmian|re gan mian|wuhan noodles; Wonton@馄饨|wontons|wonton soup|huntun|hun tun|wantan|云吞; Chaoshou@抄手|red oil wonton|red oil wontons|chao shou|红油抄手; Shengjian bao@生煎包|shengjian|shengjianbao|pan-fried bun|pan-fried buns|pan fried pork bun|sheng jian bao|sheng jian|生煎; Potstickers@锅贴|potsticker|guotie|guo tie|pan-fried dumplings|fried dumplings|煎饺; Dumplings@饺子|dumpling|jiaozi|jiao zi|boiled dumplings|水饺; Siu mai@烧麦|shaomai|shumai|siomai|shao mai|siew mai|烧卖; Lo mai gai@糯米鸡|sticky rice chicken|nuomiji|glutinous rice chicken|lotus leaf rice; Fantuan@粢饭团|rice ball|sticky rice roll|cifantuan|fan tuan|饭团; Tea egg@茶叶蛋|tea eggs|chayedan|cha ye dan|marbled egg; Egg@鸡蛋|eggs|boiled egg|boiled eggs|hard boiled egg|水煮蛋; Egg pancake@鸡蛋饼|danbing|jidanbing|dan bing|egg crepe|蛋饼; Scallion pancake@葱油饼|scallion pancakes|congyoubing|cong you bing|green onion pancake|spring onion pancake; Shaobing@烧饼|sesame flatbread|shao bing|sesame cake; Sesame ball@麻球|sesame balls|jiandui|jian dui|matuan|麻团|煎堆; Rice noodles@米粉|mifen|rice noodle|mi fen|bee hoon; Guilin rice noodles@桂林米粉|guilin mifen|guilin noodles; Luosifen@螺蛳粉|snail noodles|river snail noodles|luo si fen|snail rice noodles; Mixian@米线|crossing the bridge noodles|cross bridge noodles|yunnan rice noodles|mi xian|过桥米线; Beef noodles@牛肉面|lanzhou lamian|lanzhou beef noodles|lamian|beef noodle soup|lanzhou noodles|hand-pulled noodles|hand pulled noodles|la mian|兰州拉面|拉面; Noodles@面条|noodle|noodle soup|mian|mee|面; Chongqing noodles@重庆小面|xiaomian|chongqing xiaomian|xiao mian|小面; Fried noodles@炒面|chow mein|chao mian|chaomian; Zongzi@粽子|rice dumpling|rice dumplings|sticky rice dumpling|bak chang|zong zi|肉粽; Dim sum@早茶|yum cha|morning tea|zaocha|dimsum|点心; Har gow@虾饺|shrimp dumpling|shrimp dumplings|xiajiao|ha gao|har gao|prawn dumpling; Char siu bao@叉烧包|bbq pork bun|barbecue pork bun|char siew bao|chashaobao|cha siu bao; Custard bun@流沙包|liushabao|lava bun|salted egg yolk bun|nai wong bao|egg custard bun|奶黄包; Tangyuan@汤圆|tang yuan|glutinous rice balls; Turnip cake@萝卜糕|radish cake|luobogao|lo bak go|carrot cake; Milk@牛奶|niunai; Guokui@锅盔|guo kui; Liangpi@凉皮|cold skin noodles|liang pi; Doupi@三鲜豆皮|wuhan doupi|dou pi|豆皮; Sa tang@糁汤|satang; Butter tea@酥油茶|yak butter tea|suyoucha; Salty soy milk@咸豆浆|savory soy milk|savoury soy milk|xian doujiang; Beef soup@牛肉汤|niuroutang; Mutton soup@羊肉汤|lamb soup|yangroutang; Paomo@羊肉泡馍|yangrou paomo|lamb paomo|pao mo; Chive pocket@韭菜盒子|jiucai hezi|chive pie; Steamed egg@蒸蛋|steamed egg custard|zhengdan|鸡蛋羹; Spring roll@春卷|spring rolls|chunjuan; Fa gao@发糕|fagao|steamed sponge cake; Zhacai@榨菜|pickles|pickled vegetables|pickled mustard|咸菜; Fried rice@炒饭|egg fried rice|chaofan|蛋炒饭; Douzhi@豆汁|mung bean milk|豆汁儿; Oil tea@油茶|youcha; Naan@馕|nang; Steamed dumplings@蒸饺|zhengjiao; Meat pie@馅饼|xianbing|肉饼; Knife-cut noodles@刀削面|daoxiaomian|knife cut noodles; !Kaya toast@that one is Singaporean|kaya toast set|kaya; !Nasi lemak@that one is Malay`},
+{c:"Internet Culture", p:"Name a Chinese internet meme or slang word.", d:`yyds@永远的神, "the GOAT"|永远的神|eternal god|yong yuan de shen; Tang ping@躺平, lying flat|lying flat|lie flat|tangping|躺平|lay flat; Neijuan@内卷, involution|involution|nei juan|juan|内卷|卷|rat race; Bai lan@摆烂, let it rot|let it rot|bailan|摆烂; 996@the 9am-9pm, 6-day work week|九九六|996 culture; emo@"我emo了"|我emo了|im emo; Po fang@破防, "my defences broke"|pofang|破防|破防了; She si@社死, social death|social death|shesi|社死; Jue jue zi@绝绝子|juejuezi|绝绝子; Shuan Q@栓Q|shuanq|栓q|拴q|thank q; Tai ku la@泰裤辣, "so cool"|taikula|泰裤辣|太酷啦; City bu city@city不city|city不city|city or not city|city not city; Xianyan bao@显眼包, attention magnet|xianyanbao|显眼包; Yaoyao lingxian@遥遥领先, "far ahead"|far ahead|yaoyaolingxian|遥遥领先; Hajimi@哈基米|哈基米|ha ji mi; Ji ni tai mei@鸡你太美|jinitaimei|鸡你太美|只因|ikun|chicken you are so beautiful; Special forces travel@特种兵旅游|special forces tourism|special forces style travel|tezhongbing|特种兵旅游|特种兵; Dazi@搭子, activity buddy|da zi|搭子; i-person e-person@i人e人|i人|e人|i ren e ren|i人e人|iren|eren; Kemu san@科目三 dance|subject three|subject 3|kemusan|科目三|kemu 3; Tou gan@偷感|tougan|偷感; Ban wei@班味, "the stench of work"|banwei|班味|smell of work; Songchi gan@松弛感, effortless chill|songchigan|松弛感|relaxed vibe; Ying kong@硬控|yingkong|硬控|hard control; Niu ma@牛马, "cattle and horses"|niuma|牛马|cattle and horses|ox and horse|cow horse; Fa feng@发疯文学|fafeng|发疯|发疯文学|crazy literature; Zui ti@嘴替, "mouth substitute"|zuiti|嘴替; Lao liu@老六|laoliu|老六|old six; Da gong ren@打工人|dagongren|打工人|laborer; Versailles@凡尔赛, humblebrag|fanersai|凡尔赛|versailles literature|humblebrag; Gan fan ren@干饭人|ganfanren|干饭人|rice eater; Houlang@后浪, "rear waves"|hou lang|后浪|rear waves; Aoligei@奥利给|ao li gei|奥利给; Jimei@集美, "sisters"|ji mei|集美; Ye qing hui@爷青回, "my youth is back"|yeqinghui|爷青回; Hao zi wei zhi@耗子尾汁|haoziweizhi|耗子尾汁; Bu jiang wu de@不讲武德|no martial ethics|bujiangwude|不讲武德; Lan shou xiang gu@蓝瘦香菇|lanshouxianggu|蓝瘦香菇|blue thin mushroom|skinny blue mushroom; Ge You slouch@葛优躺|ge you tang|geyoutang|ge you lying|葛优躺|beijing slouch; Chi gua@吃瓜, "eating melon"|eating melon|eat melon|chigua|melon eating|吃瓜|吃瓜群众|melon eater|melon eaters; Foxi@佛系, Buddha-like|buddha-like|buddhist style|fo xi|佛系|buddha like youth; Gangjing@杠精, contrarian|gang jing|杠精; Koi@锦鲤, lucky koi|jinli|lucky koi|锦鲤|koi fish; Zhen xiang@真香|zhenxiang|真香|really fragrant; Lemon jing@柠檬精, jealous "lemon"|ningmengjing|柠檬精|lemon spirit|sour lemon|我酸了; Da call@打call|打call|dacall; skr@skr; Duo sun@夺笋|duosun|夺笋; Bengbu zhu le@蚌埠住了|bengbuzhule|蚌埠住了|bengbu; Jia ren men@家人们谁懂啊|jiarenmen|家人们谁懂啊|家人们; Electronic pickles@电子榨菜|dianzi zhacai|电子榨菜|digital pickles; Jingshen neihao@精神内耗|精神内耗|mental internal friction|jingshenneihao; Da yuan zhong@大冤种|dayuanzhong|大冤种|冤种; Sheep a Sheep@羊了个羊|yang le ge yang|羊了个羊; Kong Yiji@孔乙己的长衫|kongyiji|孔乙己|孔乙己文学|孔乙己的长衫; Zibo barbecue@淄博烧烤|zibo bbq|淄博烧烤; Cun Chao@村超, village super league|village super league|cunchao|村超; Cun BA@村BA, village basketball|village ba|cunba|村ba|village nba; Little potatoes@南方小土豆|southern little potatoes|nanfang xiao tudou|南方小土豆|小土豆|small potatoes; Erbin@尔滨, Harbin's nickname|er bin|尔滨; awsl@啊我死了|啊我死了; xswl@笑死我了|笑死我了|xiaosiwole; nsdd@你说得对|你说得对; u1s1@有一说一|有一说一|yysy; 666@"awesome"|六六六|liuliuliu|双击666; Lao tie@老铁, "bro"|laotie|老铁|扎心了老铁; Shang tou@上头|shangtou|上头; Xia tou@下头|xiatou|下头; Pu xin nan@普信男|puxinnan|普信男|ordinary but confident; Yin yang guai qi@阴阳怪气|yygq|阴阳怪气|yinyangguaiqi; Hai wang@海王, "sea king"|haiwang|海王|sea king; Tian gou@舔狗, simp|tiangou|舔狗|simp|licking dog|lick dog; Gongju ren@工具人, "tool person"|gongjuren|工具人|tool person|tool man; The clown is me@小丑竟是我自己|xiao chou|小丑|小丑竟是我自己|clown; Lie kai@裂开|liekai|裂开|我裂开了; First milk tea of autumn@秋天的第一杯奶茶|first cup of milk tea in autumn|autumn's first milk tea|秋天的第一杯奶茶; Shu shu@鼠鼠|shushu|鼠鼠|rat people|mouse people; Electronic wooden fish@电子木鱼|dianzi muyu|电子木鱼|cyber wooden fish|digital wooden fish; Huo ren gan@活人感|huorengan|活人感; Emotional value@情绪价值|qingxu jiazhi|情绪价值; Hong wen@红温|hongwen|红温|red temperature; Su Chao@苏超|suchao|苏超|jiangsu super league; Labubu@拉布布|拉布布; Ta fang@塌房, "house collapsed"|tafang|塌房|house collapse|house collapsed; Ke CP@磕CP, shipping|kecp|磕cp|嗑cp|shipping cp; Tian hua ban@天花板, "the ceiling"|tianhuaban|天花板|ceiling; Run@润|run xue|runology|润|润学; Mo yu@摸鱼, "touching fish"|moyu|摸鱼|touching fish|touch fish; Hua bing@画饼, empty promises|huabing|画饼|drawing a cake|draw a pie|drawing pie; PUA@gaslighting, in Chinese slang; Crispy college students@脆皮大学生|cuipi daxuesheng|脆皮大学生|crispy uni students|brittle college students; Clear-eyed stupidity@清澈的愚蠢|qingche de yuchun|清澈的愚蠢|clear stupidity; Wo lei ge dou@我嘞个豆|woleigedou|我嘞个豆; Small-town test-taker@小镇做题家|xiaozhen zuotijia|小镇做题家|small town exam taker; Ice cream assassin@雪糕刺客|xuegao cike|雪糕刺客|popsicle assassin; Sang culture@丧文化|sang|丧|丧文化; Diaosi@屌丝|diao si|屌丝; Tuhao@土豪|tu hao|土豪; Gao fu shuai@高富帅|gaofushuai|高富帅|tall rich handsome; Bai fu mei@白富美|baifumei|白富美; Little fresh meat@小鲜肉|xiaoxianrou|xiao xian rou|小鲜肉; Zhai@宅, homebody|宅|宅男|宅女|zhainan|otaku; Duang@duang; Grass mud horse@草泥马|caonima|cao ni ma|草泥马; Jiayou@加油, "add oil"|add oil|jia you|加油; Guochao@国潮, China-chic|china chic|guo chao|国潮; Wanghong@网红, influencer|wang hong|网红|internet celebrity; Chi tu@吃土, "eating dirt"|eating dirt|chitu|吃土`},
+{c:"Screen Time", p:"Name a Chinese TV drama.", d:`Empresses in the Palace@甄嬛传|legend of zhen huan|zhen huan zhuan|zhenhuanzhuan|zhen huan|后宫甄嬛传; Journey to the West@西游记|xi you ji|xiyouji|monkey king; Dream of the Red Chamber@红楼梦|hong lou meng|dream of red mansions|a dream of red mansions|red chamber; Romance of the Three Kingdoms@三国演义|three kingdoms|san guo yan yi|sanguo|新三国; Water Margin@水浒传|shui hu zhuan|outlaws of the marsh|all men are brothers; My Fair Princess@还珠格格|huan zhu ge ge|huanzhugege|princess pearl|princess returning pearl; My Own Swordsman@武林外传|wu lin wai zhuan; Drawing Sword@亮剑|liang jian; Soldiers Sortie@士兵突击|soldier sortie|shibing tuji; Lurk@潜伏|qian fu; Nirvana in Fire@琅琊榜|langya bang|lang ya bang; The Disguiser@伪装者|weizhuangzhe; Ode to Joy@欢乐颂|huan le song; All Is Well@都挺好|dou ting hao; The Story of Minglan@知否|minglan|zhi fou|知否知否应是绿肥红瘦; Story of Yanxi Palace@延禧攻略|yanxi palace|yanxi gonglue|yanxi; Ruyi's Royal Love in the Palace@如懿传|ruyi|ruyi zhuan|ruyis royal love; Joy of Life@庆余年|qing yu nian|joy of life 2; The Untamed@陈情令|chen qing ling; The Longest Day in Chang'an@长安十二时辰|longest day in changan; The Bad Kids@隐秘的角落|bad kids|yin mi de jiao luo|hidden corner; The Long Night@沉默的真相|long night; The Age of Awakening@觉醒年代|awakening age; Minning Town@山海情|shan hai qing; The Knockout@狂飙|kuang biao; The Long Season@漫长的季节; Blossoms Shanghai@繁花|blossoms|fan hua; Three-Body@三体|three body|three body problem|san ti; A Lifelong Journey@人世间|ren shi jian; Reset@开端|kai duan; A Dream of Splendor@梦华录|meng hua lu; Love Between Fairy and Devil@苍兰诀|cang lan jue; Love Like the Galaxy@星汉灿烂|xing han can lan; Lost You Forever@长相思|chang xiang si; Mysterious Lotus Casebook@莲花楼|lian hua lou|lotus casebook; Meet Yourself@去有风的地方|qu you feng de di fang; To the Wonder@我的阿勒泰|my altay|wo de aletai; The Tale of Rose@玫瑰的故事; The Double@墨雨云间|mo yu yun jian; The Legend of Shen Li@与凤行|yu feng xing; Guardians of the Dafeng@大奉打更人; Flourished Peony@国色芳华|guo se fang hua; The First Frost@难哄|nan hong; The Prisoner of Beauty@折腰|zhe yao; Legend of Zang Hai@藏海传|zang hai zhuan; Home with Kids@家有儿女|jia you er nv|jia you er nu; iPartment@爱情公寓|ai qing gong yu|love apartment; Chinese Paladin@仙剑奇侠传|xian jian|chinese paladin 3|sword and fairy|仙剑; The Return of the Condor Heroes@神雕侠侣|shen diao xia lv|condor heroes; The Legend of the Condor Heroes@射雕英雄传|she diao ying xiong zhuan; Demi-Gods and Semi-Devils@天龙八部|demi gods and semi devils|tian long ba bu; The Smiling, Proud Wanderer@笑傲江湖|smiling proud wanderer|swordsman|xiao ao jiang hu; The Heaven Sword and Dragon Saber@倚天屠龙记|heavenly sword and dragon slaying sabre|yi tian tu long ji; Kangxi Dynasty@康熙王朝|kangxi wangchao; Yongzheng Dynasty@雍正王朝|yongzheng wangchao; Ming Dynasty in 1566@大明王朝1566|ming dynasty 1566|大明王朝; Romance in the Rain@情深深雨濛濛|qing shen shen yu meng meng|情深深雨蒙蒙; The Legend of the White Snake@新白娘子传奇|legend of white snake|new legend of madame white snake|bai she zhuan|white snake|白蛇传; Scarlet Heart@步步惊心|bu bu jing xin|startling by each step; Palace@宫锁心玉|gong|宫; The Journey of Flower@花千骨|hua qian gu; Eternal Love@三生三世十里桃花|ten miles of peach blossoms|three lives three worlds|san sheng san shi|三生三世; Princess Agents@楚乔传|chu qiao zhuan; Ashes of Love@香蜜沉沉烬如霜|xiang mi|香蜜; In the Name of the People@人民的名义|name of the people|ren min de ming yi; The First Half of My Life@我的前半生; Day and Night@白夜追凶|bai ye zhui xiong; Guardian@镇魂|zhen hun; With You@最好的我们|zui hao de wo men; A Love So Beautiful@致我们单纯的小美好; Go Go Squid!@亲爱的热爱的|qin ai de re ai de; A Little Reunion@小欢喜|xiao huan xi; Nothing But Thirty@三十而已|nothing but 30|san shi er yi; Go Ahead@以家人之名|yi jia ren zhi ming; Word of Honor@山河令|shan he ling; You Are My Glory@你是我的荣耀; Love O2O@微微一笑很倾城|a smile is beautiful|just one smile is very alluring|wei wei yi xiao; My Sunshine@何以笙箫默|he yi sheng xiao mo; Boss & Me@杉杉来了|boss and me|shan shan lai le; Meteor Shower@一起来看流星雨|lets watch the meteor shower|流星雨; Meteor Garden@流星花园|liu xing hua yuan|meteor garden 2018; The Legend of Mi Yue@芈月传|mi yue zhuan; The Empress of China@武媚娘传奇|wu mei niang; Hidden Love@偷偷藏不住|tou tou cang bu zhu; When I Fly Towards You@当我飞奔向你; Till the End of the Moon@长月烬明|chang yue jin ming; Love Game in Eastern Fantasy@永夜星河|yong ye xing he; My Journey to You@云之羽|yun zhi yu; Story of Kunning Palace@宁安如梦|kunning palace|ning an ru meng; A Journey to Love@一念关山|yi nian guan shan; Only for Love@以爱为营|yi ai wei ying; One and Only@周生如故|zhou sheng ru gu; Amidst a Snowstorm of Love@在暴雪时分; The King's Avatar@全职高手|quan zhi gao shou; Put Your Head on My Shoulder@致我们暖暖的小时光; Legend of Fuyao@扶摇|fuyao; The Rise of Phoenixes@天盛长歌; Blossom@九重紫|jiu chong zi; The Romance of Tiger and Rose@传闻中的陈芊芊; Fangs of Fortune@大梦归离; Country Love@乡村爱情|xiang cun ai qing|rural love story; Princess Weiyoung@锦绣未央|jin xiu wei yang; Legend of Lu Zhen@陆贞传奇|lu zhen chuan qi; Love and Redemption@琉璃|liu li; Who Rules the World@且试天下; Blossoms in Adversity@惜花芷|xi hua zhi; War of Faith@追风者|zhui feng zhe; !Squid Game@that one is Korean; !Crash Landing on You@that one is Korean|cloy`},
+{c:"Geography", p:"Name a city in mainland China.", d:`Beijing@北京|peking; Shanghai@上海; Guangzhou@广州|canton; Shenzhen@深圳; Chengdu@成都; Chongqing@重庆; Hangzhou@杭州; Wuhan@武汉; Xi'an@西安|chang'an; Nanjing@南京|nanking; Tianjin@天津; Suzhou@苏州; Changsha@长沙; Zhengzhou@郑州; Qingdao@青岛|tsingtao; Xiamen@厦门|amoy; Kunming@昆明; Harbin@哈尔滨|haerbin; Shenyang@沈阳; Dalian@大连; Jinan@济南; Fuzhou@福州; Hefei@合肥; Nanchang@南昌; Nanning@南宁; Guiyang@贵阳; Lanzhou@兰州; Taiyuan@太原; Shijiazhuang@石家庄; Changchun@长春; Hohhot@呼和浩特|huhehaote|huhhot; Urumqi@乌鲁木齐|wulumuqi; Lhasa@拉萨; Xining@西宁; Yinchuan@银川; Haikou@海口; Sanya@三亚; Ningbo@宁波; Wenzhou@温州; Wuxi@无锡; Changzhou@常州; Nantong@南通; Xuzhou@徐州; Yangzhou@扬州; Zhenjiang@镇江; Shaoxing@绍兴; Jiaxing@嘉兴; Jinhua@金华; Yiwu@义乌; Taizhou@台州; Dongguan@东莞; Foshan@佛山; Zhuhai@珠海; Zhongshan@中山; Huizhou@惠州; Shantou@汕头|swatow; Chaozhou@潮州|teochew; Zhanjiang@湛江; Guilin@桂林; Liuzhou@柳州; Beihai@北海; Quanzhou@泉州; Zhangzhou@漳州; Putian@莆田; Luoyang@洛阳; Kaifeng@开封; Datong@大同; Pingyao@平遥; Baotou@包头; Ordos@鄂尔多斯|eerduosi; Tangshan@唐山; Baoding@保定; Qinhuangdao@秦皇岛; Chengde@承德; Zhangjiakou@张家口; Yantai@烟台; Weihai@威海; Weifang@潍坊; Zibo@淄博; Qufu@曲阜; Tai'an@泰安; Linyi@临沂; Jining@济宁; Wuhu@芜湖; Huangshan@黄山; Bengbu@蚌埠; Jingdezhen@景德镇; Ganzhou@赣州; Jiujiang@九江; Yichang@宜昌; Xiangyang@襄阳; Jingzhou@荆州; Zhuzhou@株洲; Xiangtan@湘潭; Yueyang@岳阳; Zhangjiajie@张家界; Zunyi@遵义; Dali@大理; Lijiang@丽江; Xishuangbanna@西双版纳|banna|jinghong; Shangri-La@香格里拉; Mianyang@绵阳; Leshan@乐山; Yibin@宜宾; Zigong@自贡; Luzhou@泸州; Xianyang@咸阳; Baoji@宝鸡; Yan'an@延安; Tianshui@天水; Dunhuang@敦煌; Kashgar@喀什|kashi; Turpan@吐鲁番|tulufan; Karamay@克拉玛依; Daqing@大庆; Qiqihar@齐齐哈尔; Mudanjiang@牡丹江; Jilin City@吉林市|jilin; Yanji@延吉; Anshan@鞍山; Dandong@丹东; Fushun@抚顺; Jinzhou@锦州; Lianyungang@连云港; Yancheng@盐城; Huai'an@淮安; Kunshan@昆山; Zhoushan@舟山; Huzhou@湖州; Lishui@丽水; Quzhou@衢州; Shaoguan@韶关; Jiangmen@江门; Zhaoqing@肇庆; Maoming@茂名; Meizhou@梅州; Jieyang@揭阳; Shigatse@日喀则|rikaze|xigaze; Hulunbuir@呼伦贝尔|hulunbeier; Chifeng@赤峰; Handan@邯郸; Anyang@安阳; Nanyang@南阳; Xinxiang@新乡; Langfang@廊坊; Cangzhou@沧州; Heze@菏泽; Rizhao@日照; Dezhou@德州; Ningde@宁德; Tengchong@腾冲; Pu'er@普洱; Mohe@漠河; !Hong Kong@a Special Administrative Region, not the mainland|hk|香港; !Macau@a Special Administrative Region, not the mainland|macao|澳门`},
+{c:"Street Food", p:"Name a Chinese regional street food or snack.", d:`Stinky tofu@臭豆腐|chou doufu|choudoufu|smelly tofu|长沙臭豆腐; Jianbing@煎饼果子|jian bing|chinese crepe|jianbing guozi|煎饼; Roujiamo@肉夹馍|rou jia mo|chinese burger|chinese hamburger; Liangpi@凉皮|cold skin noodles|liang pi; Luosifen@螺蛳粉|snail noodles|river snail noodles|luo si fen|snail rice noodles; Hot dry noodles@热干面|reganmian|re gan mian; Xiaolongbao@小笼包|soup dumpling|soup dumplings|xiao long bao|xlb; Shengjian bao@生煎包|shengjian|shengjianbao|pan-fried bun|pan-fried buns|sheng jian bao|sheng jian|生煎; Cheung fun@肠粉|changfen|rice noodle roll|rice noodle rolls|chee cheong fun|cheong fun; Grilled cold noodles@烤冷面|kao leng mian|kaolengmian; Tanghulu@糖葫芦|tang hu lu|candied hawthorn|candied haw|candied fruit|bingtanghulu|冰糖葫芦; Lvdagun@驴打滚|donkey roll|ludagun|rolling donkey; Zhajiangmian@炸酱面|zha jiang mian|fried sauce noodles; Goubuli baozi@狗不理包子|goubuli|狗不理; Mahua@麻花|fried dough twist|tianjin mahua|dough twist|天津麻花; Paomo@羊肉泡馍|yangrou paomo|pao mo|lamb paomo; Biang biang noodles@油泼面|biangbiang noodles|biangbiang mian|biang biang mian|youpo mian|oil splashed noodles|biangbiang面|biangbiang; Lanzhou beef noodles@兰州牛肉面|lanzhou lamian|lamian|lanzhou noodles|hand-pulled noodles|hand pulled noodles|beef noodles|兰州拉面|牛肉面; Dan dan noodles@担担面|dandan noodles|dandanmian|dan dan mian; Bobo chicken@钵钵鸡|boboji|bo bo ji; Maocai@冒菜|mao cai; Chuan chuan@串串香|chuanchuan|chuan chuan xiang|串串; Malatang@麻辣烫|ma la tang|mala tang|mala; Spicy rabbit head@兔头|rabbit head|tutou|麻辣兔头; Chaoshou@抄手|red oil wonton|red oil wontons|long chaoshou|龙抄手|红油抄手; Bingfen@冰粉|ice jelly|bing fen; Suan la fen@酸辣粉|hot and sour noodles|sour and spicy noodles|suanlafen|hot and sour glass noodles; Chongqing noodles@重庆小面|xiaomian|chongqing xiaomian|小面; Crossing-the-bridge noodles@过桥米线|crossing the bridge noodles|cross bridge noodles|guoqiao mixian|mixian|米线; Flower cake@鲜花饼|xianhuabing|rose cake|flower pastry; Erkuai@饵块|er kuai|烧饵块; Siwawa@丝娃娃|si wa wa; Guilin rice noodles@桂林米粉|guilin mifen|guilin noodles; Rice noodles@米粉|mifen|mi fen; Double-skin milk@双皮奶|double skin milk|shuangpinai|shuang pi nai; Ginger milk curd@姜撞奶|jiangzhuangnai|ginger milk pudding|ginger milk; Wonton noodles@云吞面|wantan mee|wonton mee|yuntunmian|wonton noodle; Har gow@虾饺|shrimp dumpling|shrimp dumplings|ha gao|har gao; Char siu bao@叉烧包|bbq pork bun|char siew bao|cha siu bao; Claypot rice@煲仔饭|clay pot rice|baozaifan|bo zai fan; Beef offal@牛杂|niuza|ngau zap; Beef balls@潮汕牛肉丸|chaoshan beef balls|beef ball|牛肉丸; Oyster omelette@海蛎煎|oyster omelet|orh luak|or luak|蚝烙|蚝仔煎|oyster pancake; Tusundong@土笋冻|sea worm jelly|tu sun dong; Shacha noodles@沙茶面|shachamian|satay noodles|sha cha mian; Shaxian snacks@沙县小吃|shaxian|sha xian|沙县; Fish balls@鱼丸|fishball|fish ball|fishballs|yuwan|fuzhou fish balls|福州鱼丸|咖喱鱼蛋|curry fish balls|鱼蛋; Qingbuliang@清补凉|ching bo leung|qing bu liang|cheng tng; Duck blood vermicelli soup@鸭血粉丝汤|duck blood soup|duck blood vermicelli|鸭血粉丝; Salted duck@盐水鸭|nanjing salted duck|yanshuiya; Soup bun@灌汤包|tangbao|guantangbao|汤包|crab roe soup bun|蟹黄汤包; Yangchun noodles@阳春面|yangchunmian|yang chun mian; Wonton@馄饨|wontons|huntun|小馄饨; Qingtuan@青团|qing tuan|green rice ball; Zongzi@粽子|rice dumpling|rice dumplings|sticky rice dumpling|bak chang|zong zi|嘉兴粽子|肉粽; Hulatang@胡辣汤|hu la tang|spicy pepper soup; Hui mian@烩面|huimian|henan noodles; Knife-cut noodles@刀削面|daoxiaomian|knife cut noodles|dao xiao mian|knife shaved noodles; Youmian@莜面|you mian|oat noodles; Shandong pancake@山东煎饼|shandong jianbing; Donkey burger@驴肉火烧|lvrou huoshao|donkey meat sandwich|lurou huoshao|donkey sandwich|火烧; Guokui@锅盔|guo kui; Liangfen@凉粉|liang fen|mung bean jelly; Siu mai@烧麦|shaomai|shumai|siomai|shao mai|siew mai|烧卖; Milk tofu@奶豆腐|naidoufu|milk curd; Naan@馕|nang|烤馕|uyghur bread; Samsa@烤包子|kao baozi|baked bun; Polo@手抓饭|pilaf|zhuafan|xinjiang pilaf|抓饭|plov; Lamb skewers@羊肉串|chuan|chuanr|yangrouchuan|lamb kebab|kebab|kebabs|lamb skewer|mutton skewers|bbq skewers|skewers|烤串|shaokao|烧烤; Butter tea@酥油茶|yak butter tea|suyoucha; Tsampa@糌粑|zanba; Niangpi@酿皮|niang pi; Saozi noodles@臊子面|saozimian|sao zi mian; Cold noodles@凉面|liangmian|liang mian; Sticky bean bun@粘豆包|niandoubao|zhan dou bao; Frozen pear@冻梨|dongli|dong li; Harbin sausage@哈尔滨红肠|hongchang|red sausage|红肠; Yanbian cold noodles@延边冷面|korean cold noodles|leng mian|lengmian|naengmyeon|冷面; Doupi@三鲜豆皮|wuhan doupi|dou pi|豆皮; Duck neck@鸭脖|yabo|spicy duck neck|ya bo; Clay pot soup@瓦罐汤|waguantang|jar soup; Nanchang mixed noodles@南昌拌粉|banfen|拌粉; Ciba@糍粑|ci ba|sticky rice cake|glutinous rice cake; Grass jelly@烧仙草|xiancao|shao xian cao|herbal jelly; Spring roll@春卷|spring rolls|chunjuan|popiah|润饼|runbing; Pork chop rice cake@排骨年糕|paigu niangao; Scallion oil noodles@葱油拌面|congyou banmian|scallion noodles|spring onion noodles; Plum blossom cake@梅花糕|meihuagao; Sesame ball@麻球|sesame balls|jiandui|jian dui|煎堆|麻团; Jiuniang yuanzi@酒酿圆子|fermented rice balls|sweet rice wine balls; Osmanthus cake@桂花糕|guihuagao; Egg waffle@鸡蛋仔|egg waffles|gai daan jai|bubble waffle|eggette|eggettes|jidanzai; Pineapple bun@菠萝包|bolo bao|boluobao|bo lo bao; Egg tart@蛋挞|egg tarts|dan ta|danta|portuguese egg tart|葡式蛋挞; Potstickers@锅贴|potsticker|guotie|guo tie|pan-fried dumplings; Tofu pudding@豆花|douhua|doufunao|tofu brain|tau huay|豆腐脑; Lo mai gai@糯米鸡|sticky rice chicken|nuomiji; Shaobing@烧饼|sesame flatbread|shao bing; Tangyuan@汤圆|tang yuan|glutinous rice balls; Nian gao@年糕|niangao|rice cake|new year cake; Wolf-tooth potatoes@狼牙土豆|langya tudou|spicy potatoes; Kao shao pi@烤苕皮|kaoshaopi; Grilled gluten@烤面筋|kao mianjin|kaomianjin; Starch sausage@淀粉肠|dianfenchang|烤肠|kaochang|grilled sausage; Baozi@包子|bao|steamed bun|steamed buns; Dumplings@饺子|dumpling|jiaozi|水饺; Scallion pancake@葱油饼|scallion pancakes|congyoubing|cong you bing|green onion pancake; Youtiao@油条|fried dough stick|fried dough sticks|you tiao|dough fritter; Tea egg@茶叶蛋|tea eggs|chayedan; Roasted chestnuts@糖炒栗子|sugar roasted chestnuts|chestnuts|tangchao lizi|sugar fried chestnuts; Roasted sweet potato@烤红薯|baked sweet potato|kao hongshu|sweet potato|烤地瓜; Dragon's beard candy@龙须糖|dragon beard candy|longxutang; Sugar painting@糖画|tanghua|sugar art; Mung bean cake@绿豆糕|lvdougao|green bean cake; Sachima@沙琪玛|shaqima; !Hotpot@that's a full meal, not a snack|hot pot|huoguo|火锅; !Peking duck@that's a full dish, not a snack|beijing duck|roast duck|北京烤鸭|烤鸭`},
+{c:"Tradition", p:"Name a Chinese festival tradition.", d:`Red envelopes@红包|red envelope|hongbao|hong bao|ang pao|angpao|ang bao|angbao|red packet|red packets|lucky money|lai see|laisee|压岁钱|ya sui qian|yasuiqian|发红包|收红包; Firecrackers@放鞭炮|firecracker|setting off firecrackers|bianpao|fang bianpao|鞭炮|放炮; Fireworks@放烟花|firework|yanhua|烟花; Spring couplets@贴春联|chunlian|couplets|spring festival couplets|red couplets|duilian|春联|对联|贴对联; Reunion dinner@年夜饭|nianyefan|new year's eve dinner|family reunion dinner|reunion meal|tuanyuanfan|团圆饭|family dinner; Eating dumplings@吃饺子|dumplings|eat dumplings|making dumplings|jiaozi|饺子|包饺子; Staying up on New Year's Eve@守岁|shousui|staying up late|stay up late|staying up|守夜; New Year visits@拜年|bainian|bai nian|visiting relatives|visiting family|new year greetings|house visiting|visiting|走亲戚|串门; Fu character@贴福字|fu|upside down fu|upside-down fu|福字|倒贴福字|fu sign|福; Paper cutting@贴窗花|paper cuttings|window flowers|chuanghua|jianzhi|paper cut|窗花|剪窗花|剪纸; Spring Festival Gala@看春晚|chunwan|cctv gala|new year gala|watching the gala|cctv new year's gala|春晚; Lion dance@舞狮|lion dancing|wushi|舞龙舞狮; Dragon dance@舞龙|dragon dancing|wulong; Temple fair@逛庙会|temple fairs|miaohui|庙会; Spring cleaning@扫尘|cleaning the house|house cleaning|dasaochu|大扫除|sweeping the dust|cleaning; Kitchen God@祭灶|worshipping the kitchen god|jizao|kitchen god festival|送灶|xiaonian; Eating tangyuan@吃汤圆|tangyuan|yuanxiao|tang yuan|glutinous rice balls|eating yuanxiao|汤圆|元宵|吃元宵; Lanterns@赏花灯|lantern|lantern festival|hanging lanterns|red lanterns|lantern display|carrying lanterns|huadeng|花灯|灯会|看花灯|lighting lanterns; Lantern riddles@猜灯谜|lantern riddle|dengmi|guessing riddles|riddles|灯谜; Tomb sweeping@扫墓|tomb-sweeping|sweeping tombs|grave sweeping|qingming|saomu|visiting graves|上坟|cleaning graves; Ancestor worship@祭祖|worshipping ancestors|honoring ancestors|honouring ancestors|jizu|praying to ancestors|ancestor veneration; Spring outing@踏青|taqing|ta qing; Flying kites@放风筝|kite flying|kites|fly kites|fang fengzheng|风筝; Eating qingtuan@吃青团|qingtuan|青团; Dragon boat racing@赛龙舟|dragon boat|dragon boats|dragon boat race|dragon boat races|dragonboat|sai longzhou|划龙舟|龙舟; Eating zongzi@吃粽子|zongzi|rice dumplings|rice dumpling|eating rice dumplings|bak chang|粽子|包粽子; Hanging mugwort@挂艾草|mugwort|aicao|hanging wormwood|calamus|艾草|插艾草|挂菖蒲; Sachets@戴香囊|sachet|scented sachets|xiangnang|perfume pouch|香囊|佩香囊; Realgar wine@喝雄黄酒|xionghuang wine|xionghuangjiu|雄黄酒; Five-colour thread@系五彩绳|five color thread|five-colored string|wucaisheng|five colour string|五彩绳|五色线; Moon gazing@赏月|moon viewing|admiring the moon|watching the moon|moon watching|shangyue|looking at the moon|moongazing; Eating mooncakes@吃月饼|mooncake|mooncakes|moon cake|moon cakes|yuebing|月饼; Climbing heights@登高|climbing mountains|climbing a mountain|hill climbing|denggao|mountain climbing; Chrysanthemum viewing@赏菊|chrysanthemums|chrysanthemum|shangju|chrysanthemum wine|喝菊花酒; Wearing dogwood@插茱萸|dogwood|zhuyu|cornel|茱萸; Laba congee@喝腊八粥|laba porridge|laba zhou|labazhou|腊八粥|laba; Laba garlic@腌腊八蒜|labasuan|腊八蒜; Qixi needle-threading@乞巧|qiqiao|threading needles|qixi|穿针乞巧; River lanterns@放河灯|floating lanterns|water lanterns|hedeng; Sky lanterns@放孔明灯|sky lantern|kongming lantern|kongming lanterns|releasing lanterns|孔明灯; Burning joss paper@烧纸钱|joss paper|burning paper money|paper money|ghost money|burning paper|spirit money|hell money|shaozhi|烧纸|burning offerings; Eating nian gao@吃年糕|nian gao|niangao|new year cake|rice cake|年糕|打年糕; Door gods@贴门神|door god|menshen|门神; Flower market@逛花市|flower markets|flower fair|huashi|行花街; Burning incense@烧香|incense|joss sticks|praying at the temple|temple visit|visiting temples|上香|抢头香|first incense|praying; Worshipping the moon@拜月|moon worship|baiyue|祭月; Double Ninth cake@吃重阳糕|chongyang cake|重阳糕; Respecting elders@敬老|honouring the elderly|honoring elders|visiting the elderly; Dragon-head haircut@二月二剃龙头|longtaitou haircut|haircut on longtaitou|剃龙头|理发|dragon head raising; Spring pancakes@吃春饼|chunbing|biting spring|咬春|春饼; New Year paintings@贴年画|nianhua|new year pictures|年画; Welcoming the God of Wealth@迎财神|god of wealth|caishen|welcoming caishen|接财神|god of fortune; Eating fish@吃鱼|fish|nian nian you yu|年年有余|whole fish; New clothes@穿新衣|wearing new clothes|new clothes for new year|穿新衣服; Wearing red@穿红色|red clothes|wear red|red underwear|wearing red clothes; Stilt walking@踩高跷|stilts|gaoqiao|高跷; Yangge dance@扭秧歌|yangge|秧歌; Shehuo@社火|she huo|闹社火; Deity parade@游神|youshen|parade of the gods|god parade; Yingge dance@英歌舞|yingge|ying ge; Molten iron fireworks@打铁花|datiehua|iron flower|iron flowers|striking iron flowers; Water splashing@泼水节|water splashing festival|water festival|poshui|泼水|splashing water; Egg balancing@立蛋|standing eggs|balancing eggs|egg standing|竖蛋; Mooncake gambling@博饼|bo bing|bobing|mooncake dice game|中秋博饼|dice game; Tidal bore watching@钱塘观潮|watching the tide|qiantang tide|tide watching|观潮; Kitchen candy@吃灶糖|zaotang|tanggua|糖瓜; New Year shopping@办年货|nianhuo|buying new year goods|new year goods|买年货; Kowtow@磕头|kowtowing|ketou|bowing to elders; Lo hei@捞鱼生, a Singapore and Malaysia tradition|yusheng|yu sheng|lou hei|prosperity toss|lohei|捞鱼生|捞起|鱼生|tossing yusheng; Mandarin oranges@送橘子|oranges|giving oranges|exchanging oranges|mandarin orange|tangerines|exchanging mandarin oranges|giving mandarin oranges|kumquat|kumquat tree|金桔; Pomelo@吃柚子|pomelos|eating pomelo|柚子; Hungry Ghost offerings@中元节|hungry ghost festival|ghost festival offerings|getai|ghost month offerings|zhongyuan; Not sweeping on New Year's Day@初一不扫地|no sweeping|not sweeping|dont sweep the floor|no sweeping on new year; Not washing hair@初一不洗头|no washing hair|dont wash hair|not washing hair on new year`},
+{c:"Daily Life", p:"Name a Chinese brand.", d:`Huawei@华为; Xiaomi@小米|mi|redmi; BYD@比亚迪|build your dreams; Alibaba@阿里巴巴|ali|阿里; Taobao@淘宝|tmall|天猫; Tencent@腾讯; WeChat@微信|weixin|we chat; QQ; Alipay@支付宝|zhifubao|ant group; JD.com@京东|jd|jingdong; Pinduoduo@拼多多|pdd; Temu; Shein|she in; TikTok@抖音|douyin|tik tok|bytedance|字节跳动; Xiaohongshu@小红书|rednote|red note|little red book|xhs|red; Bilibili@哔哩哔哩|b站|bili|b zhan; Weibo@微博|sina weibo|sina; Baidu@百度; Meituan@美团; Ele.me@饿了么|eleme|ele me; Didi@滴滴|didi chuxing; DJI@大疆|dajiang; Lenovo@联想|lianxiang; Haier@海尔; Midea@美的; Gree@格力; Hisense@海信; TCL; Oppo; Vivo; OnePlus@一加|one plus|yijia; Realme; Honor@荣耀|rongyao; Anker@安克; Li-Ning@李宁|li ning; Anta@安踏; Xtep@特步|tebu; Erke@鸿星尔克|hongxing erke; Feiyue@飞跃; Warrior@回力|huili; 361 Degrees@361度|361; Bosideng@波司登; Luckin Coffee@瑞幸咖啡|luckin|ruixing|瑞幸; Mixue@蜜雪冰城|mixue bingcheng|mi xue; Heytea@喜茶|hey tea|xicha; Chagee@霸王茶姬|bawang chaji; Nayuki@奈雪的茶|naixue|奈雪; Cotti Coffee@库迪咖啡|cotti|kudi; Haidilao@海底捞|hai di lao|hdl; Pop Mart@泡泡玛特|popmart|labubu|paopao mate; Miniso@名创优品|mingchuang youpin; Moutai@茅台|maotai|kweichow moutai; Wuliangye@五粮液; Tsingtao@青岛啤酒|tsingtao beer|qingdao beer|qingdao pijiu|tsing tao; Snow Beer@雪花啤酒|snow|xuehua|雪花; Harbin Beer@哈尔滨啤酒|harbin|hapi|哈啤; Wanglaoji@王老吉|wong lo kat|wang lao ji; Jiaduobao@加多宝|jdb; Nongfu Spring@农夫山泉|nongfu|nongfu shanquan; Wahaha@娃哈哈; Want Want@旺旺|wangwang|wang wang|旺仔|wangzai; Master Kong@康师傅|kang shi fu|kangshifu|master kang; Lao Gan Ma@老干妈|laoganma|old godmother|lao gan ma chili; Haitian@海天|haday|海天酱油; Lee Kum Kee@李锦记|lkk; White Rabbit@大白兔|white rabbit candy|dabaitu|大白兔奶糖; Weilong@卫龙|wei long|latiao; Three Squirrels@三只松鼠|san zhi songshu; Bestore@良品铺子|liangpin puzi; Mengniu@蒙牛; Yili@伊利; Bright Dairy@光明|guangming|光明乳业; Feihe@飞鹤; NIO@蔚来|weilai; Xpeng@小鹏|xiaopeng; Li Auto@理想|lixiang|li xiang; Geely@吉利|jili; Wuling@五菱|wuling hongguang|五菱宏光; Great Wall@长城|great wall motors|gwm|haval|哈弗; Chery@奇瑞|qirui; Hongqi@红旗|red flag; Zeekr@极氪|jike; CATL@宁德时代|ningde shidai; NetEase@网易|wangyi; miHoYo@米哈游|hoyoverse|mihayou|genshin; SF Express@顺丰|shunfeng|sf; Florasis@花西子|huaxizi; Perfect Diary@完美日记|wanmei riji; Proya@珀莱雅; Pechoin@百雀羚|baiqueling; Yunnan Baiyao@云南白药; Tong Ren Tang@同仁堂|tongrentang; Supor@苏泊尔; Joyoung@九阳|jiuyang; Roborock@石头科技|shitou|石头; Ecovacs@科沃斯|kewosi; Dreame@追觅|zhuimi; Insta360@影石; Unitree@宇树|yushu; DeepSeek@深度求索; Trip.com@携程|ctrip|xiecheng|trip; AliExpress@速卖通; Kuaishou@快手|kwai; Zhihu@知乎; China Mobile@中国移动|移动; China Unicom@中国联通|联通; China Telecom@中国电信|电信; Air China@中国国航|国航; Liushen@六神|花露水|florida water; Dabao@大宝; Blue Moon@蓝月亮|lanyueliang; Liby@立白|libai; Yuanqi Forest@元气森林|genki forest|yuanqi senlin|chi forest; Arctic Ocean@北冰洋|beibingyang; Jianlibao@健力宝; Coconut Palm@椰树|yeshu|椰树椰汁|coconut tree; Chow Tai Fook@周大福|ctf|zhoudafu; Lao Feng Xiang@老凤祥; Yadea@雅迪; Ninebot@九号|segway ninebot|segway; Hello Bike@哈啰|haluo|hellobike; Deli@得力; M&G@晨光|chenguang|m and g; Hero@英雄钢笔|hero pen|英雄; Forever@永久|永久自行车|yongjiu; Phoenix@凤凰|凤凰自行车|phoenix bicycle; Double Happiness@红双喜|dhs|hongshuangxi; Daoxiangcun@稻香村; Quanjude@全聚德; Wallace@华莱士|hualaishi; Tastien@塔斯汀|tasiting; Zhou Hei Ya@周黑鸭|zhouheiya; Juewei@绝味|绝味鸭脖; Pangdonglai@胖东来|pang dong lai; Freshippo@盒马|hema; Sinopec@中国石化|中石化; PetroChina@中国石油|中石油; ICBC@工商银行|工行; Bank of China@中国银行|boc; UnionPay@银联|yinlian|china unionpay; COMAC@中国商飞|c919; ZTE@中兴|zhongxing; Hikvision@海康威视; Transsion@传音|tecno|infinix; SAIC@上汽|mg|名爵|roewe; Changan@长安汽车|chang'an|长安; Manner Coffee@Manner|manner; Semir@森马; HLA@海澜之家|heilan home; Metersbonwe@美特斯邦威|美邦; Laopu Gold@老铺黄金|laopu; !Tiger Balm@that one is from Singapore|虎标万金油; !Shopee@that one is from Singapore; !Grab@that one is from Singapore; !Uniqlo@that one is Japanese|优衣库; !Samsung@that one is Korean|三星`}
+];
+const TIERS = [ // [minimum score, title, seal, line]
+  [90,"100% Concentrate","极浓","Undiluted. You know things other people don't."],
+  [75,"Extra Strong","特浓","Most of your answers, nobody else thought of."],
+  [55,"Full Strength","正浓","A solid base. Go rarer next time."],
+  [35,"Diluted","偏淡","Everyone else had the same answers."],
+  [0, "Mostly Water","白水","Go eat a Chinese breakfast and try again."]
+];
+
+// ---------- 2. Pure game logic (validation + rarity scoring) ----------
+const T2S = {};
+(()=>{const t="漿饅頭腸麵餛飩湯餅條飯雞糰團鍋貼餃熱乾燙節龍門國劇傳紅樓夢遊記慶餘歡樂頌還豬鴨燒滷粵廣東車長風聲陽銀寶華為爲買賣鹽醬絲魚檸鳳燈籠錢歲聯對掃墳賽圓給壓貓網訊騰農鮮達綠飲營養線馬無語絕內擺爛發瘋顯鹹蘿涼麗島濟寧鄭陝蘭貴廈瀋爾濱連蘇錫漢滬鎮鵬鷺這個們時會說過來開關見愛樣麼點兒親亞鐵嶽觀偽裝請問萬與歸葉雲義劍俠鬥羅陸讓飛彈潛鄉婦戀結戰爭廚遲燭課業輪轉運齒領遙質疑堅強臉書電腦機場藥皂纖維潔",
+ s="浆馒头肠面馄饨汤饼条饭鸡团团锅贴饺热干烫节龙门国剧传红楼梦游记庆余欢乐颂还猪鸭烧卤粤广东车长风声阳银宝华为为买卖盐酱丝鱼柠凤灯笼钱岁联对扫坟赛圆给压猫网讯腾农鲜达绿饮营养线马无语绝内摆烂发疯显咸萝凉丽岛济宁郑陕兰贵厦沈尔滨连苏锡汉沪镇鹏鹭这个们时会说过来开关见爱样么点儿亲亚铁岳观伪装请问万与归叶云义剑侠斗罗陆让飞弹潜乡妇恋结战争厨迟烛课业轮转运齿领遥质疑坚强脸书电脑机场药皂纤维洁";
+ const a=[...t],b=[...s];a.forEach((ch,i)=>{T2S[ch]=b[i]});})();
+// norm: lower case, no tone marks, no "the/a/an" at the start, no spaces or punctuation, traditional -> simplified
+function norm(s){
+  const x=String(s||"").normalize("NFKD").replace(/\p{M}/gu,"").toLowerCase().trim().replace(/^(the|an|a)\s+/,"");
+  return [...x].map(ch=>T2S[ch]||ch).join("").replace(/[\s\p{P}\p{S}]/gu,"");
+}
+const INDEX = Q.map(q=>{ // spelling -> {name, note, ok}
+  const m=new Map();
+  q.d.split(";").map(e=>e.trim()).filter(Boolean).forEach(entry=>{
+    const parts=entry.split("|"); let [name,note]=parts[0].split("@");
+    const ok=!name.startsWith("!"); name=name.replace(/^!/,"").trim();
+    const rec={name, note:(note||"").trim(), ok};
+    [name, ok?rec.note:"", ...parts.slice(1)].forEach(a=>{const k=norm(a); if(k && !m.has(k)) m.set(k,rec);});
+  });
+  return m;
+});
+function match(qi, raw){
+  const n=norm(raw); if(!n) return null;
+  const m=INDEX[qi];
+  if(m.has(n)) return m.get(n);
+  if(n.endsWith("s") && m.has(n.slice(0,-1))) return m.get(n.slice(0,-1));
+  let best=null,len=0;                       // fallback: longest known answer inside a longer phrase
+  for(const [k,rec] of m){
+    const min=/[^\x00-\x7f]/.test(k)?2:4;
+    if(k.length>=min && k.length>len && n.includes(k)){best=rec;len=k.length;}
+  }
+  return best;
+}
+// Rarity Score = 100 / sqrt(1 + N), N = OTHER players who gave the same answer. Not on the list = 0.
+function rarity(sameCount){ return sameCount>0 ? 100/Math.sqrt(sameCount) : 0; }
+function compute(plays){ // plays: [{id, a:[7 strings]}]
+  const counts=Q.map(()=>new Map());
+  plays.forEach(p=>Q.forEach((_,i)=>{const a=p.a[i]; if(a) counts[i].set(a,(counts[i].get(a)||0)+1);}));
+  const rows=plays.map(p=>{
+    const per=Q.map((_,i)=>p.a[i]?rarity(counts[i].get(p.a[i])):0);
+    return {id:p.id, per, score:per.reduce((x,y)=>x+y,0)/Q.length, t:p.t||0};
+  }).sort((x,y)=>y.score-x.score||x.t-y.t);
+  return {counts, rows};
+}
+function tierOf(score){ return TIERS.find(t=>score>=t[0]); }
+if(typeof module!=="undefined") module.exports={norm,match,compute,rarity,tierOf,Q,INDEX};
+
+// ---------- 3. The app (screens) ----------
+if(typeof document!=="undefined"){
+const app=document.getElementById("app");
+const S={screen:"home", qi:0, a:[], raw:[], mine:null, plays:new Map(), uid:null, db:null, user:null,
+         online:false, tried:false, saved:false, saveFailed:false, names:{}, isOwner:false};
+let timer=null, deadline=0;
+const LOCAL_ID="me-local", LS="china-index-en-"+DAY;
+const pad=n=>String(n).padStart(2,"0");
+
+function el(tag, attrs, ...kids){
+  const e=document.createElement(tag);
+  for(const k in (attrs||{})){ const v=attrs[k];
+    if(k==="class") e.className=v; else if(k.startsWith("on")) e.addEventListener(k.slice(2),v);
+    else if(k==="style") e.style.cssText=v; else e.setAttribute(k,v); }
+  kids.flat().forEach(c=>{ if(c!=null&&c!==false) e.append(c.nodeType?c:document.createTextNode(String(c))); });
+  return e;
+}
+const mast=right=>el("header",{class:"mast"},el("b",{lang:"zh"},"中国浓度"),el("span",{class:"mono"},right));
+
+function allPlays(){ // saved plays + my own if it is not saved
+  const arr=[...S.plays.entries()].map(([id,p])=>({id,a:p.a,t:p.t,raw:p.raw}));
+  if(S.mine && !(S.uid && S.plays.has(S.uid))) arr.push({id:LOCAL_ID,a:S.mine.a,t:S.mine.t,raw:S.mine.raw});
+  return arr;
+}
+const myId=()=> (S.uid && S.plays.has(S.uid)) ? S.uid : LOCAL_ID;
+
+function render(){
+  clearInterval(timer);
+  app.replaceChildren(...(S.screen==="play"?viewPlay():S.screen==="result"?viewResult():viewHome()));
+  if(S.screen==="play") startTimer();
+}
+
+function viewHome(){
+  const n=S.plays.size;
+  return [
+    mast("China Index · Day "+DAY),
+    el("section",{class:"hero"},
+      el("div",{class:"seal","aria-hidden":"true",lang:"zh"},"浓度"),
+      el("span",{class:"mono"},"Today's challenge"),
+      el("h1",null,"How deep does your China go?"),
+      el("p",{class:"muted"},`${Q.length} questions. ${SECS} seconds each. The fewer people share your answer, the more you score.`)),
+    el("button",{class:"btn",id:"start",onclick:()=>{ if(S.mine){S.screen="result";} else {S.screen="play";S.qi=0;S.a=[];S.raw=[];} render(); }},
+      S.mine?"See my result →":"Start the challenge →"),
+    el("p",{class:"mono"}, S.online ? `${n} ${n===1?"player has":"players have"} finished today` :
+        S.tried ? "Solo mode: shared scores are coming soon" : "Connecting to the leaderboard…"),
+    el("ol",{class:"rules"},
+      el("li",null,el("span",{class:"mono"},"01"),el("span",null,"One answer per question. No changes after you submit.")),
+      el("li",null,el("span",{class:"mono"},"02"),el("span",null,"Type in English, pinyin or Chinese.")),
+      el("li",null,el("span",{class:"mono"},"03"),el("span",null,"Answers that aren't on the answer list score 0."))),
+    el("p",{class:"note"},"This game doesn't test how much you know. It tests how much you know that other people don't.")
+  ];
+}
+
+function viewPlay(){
+  const q=Q[S.qi];
+  const input=el("input",{type:"text",id:"answer",autocomplete:"off",autocapitalize:"off",spellcheck:"false",maxlength:"50",placeholder:"Type one answer","aria-label":q.p});
+  input.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.isComposing) submit(); });
+  setTimeout(()=>input.focus(),0);
+  return [
+    mast("Day "+DAY),
+    el("section",{class:"play"},
+      el("div",{class:"qhead"},
+        el("span",{class:"mono"},`Question ${pad(S.qi+1)} / ${pad(Q.length)}`),
+        el("span",{class:"secs",id:"secs"},SECS)),
+      el("div",{class:"bar"},el("i",{id:"bar"})),
+      el("span",{class:"chip"},q.c),
+      el("h2",null,q.p),
+      input,
+      el("button",{class:"btn",id:"submit",onclick:submit},"Submit answer"))
+  ];
+}
+function startTimer(){
+  deadline=Date.now()+SECS*1000;
+  timer=setInterval(()=>{
+    const left=Math.max(0,deadline-Date.now());
+    const s=document.getElementById("secs"), b=document.getElementById("bar");
+    if(s) s.textContent=Math.ceil(left/1000);
+    if(b) b.style.transform=`scaleX(${left/(SECS*1000)})`;
+    if(left<=0) submit();
+  },100);
+}
+function submit(){
+  clearInterval(timer);
+  const raw=(document.getElementById("answer")?.value||"").trim().slice(0,50);
+  const rec=match(S.qi,raw);
+  S.a[S.qi]= rec&&rec.ok ? rec.name : "";
+  S.raw[S.qi]= rec&&rec.ok ? "" : raw;        // keep unknown answers so the owner can review them
+  if(S.qi<Q.length-1){ S.qi++; render(); } else finish();
+}
+function finish(){
+  S.mine={v:1,day:DAY,a:S.a.slice(),raw:S.raw.slice(),t:Date.now()};
+  try{ localStorage.setItem(LS,JSON.stringify(S.mine)); }catch(e){}
+  S.screen="result"; render(); save();
+}
+async function save(){
+  if(!S.db||!S.uid||!S.mine||S.saved||S.plays.has(S.uid)) return;
+  try{ await S.db.doc("plays/"+S.uid).set(S.mine); S.saved=true; }
+  catch(e){ S.saveFailed=true; }
+  if(S.screen==="result") render();
+}
+
+function viewResult(){
+  const plays=allPlays(), {counts,rows}=compute(plays), me=myId();
+  const idx=rows.findIndex(r=>r.id===me), row=rows[idx], mine=plays.find(p=>p.id===me);
+  const t=tierOf(row.score), n=rows.length, score=row.score.toFixed(1);
+  const rankText= n>1 ? `No. ${idx+1} of ${n}` : "First player in";
+  const out=[ mast("China Index · "+DAY),
+    el("section",{class:"card"},
+      el("span",{class:"mono"},"My China concentration"),
+      el("div",{class:"seal","aria-hidden":"true",lang:"zh"},t[2]),
+      el("div",{class:"score"},score),
+      el("h2",null,t[1]),
+      el("p",{class:"muted"},t[3]),
+      el("div",{class:"rank"},el("span",{class:"mono"},"Today's rank"),el("strong",null,rankText))),
+    el("p",{class:"note"}, n<5 ? "Only a few people have played, so scores run high. As more friends play, scores update by themselves."
+        : "This score is provisional. It updates as more people play."),
+    (me===LOCAL_ID && (S.saveFailed||(S.tried&&(!S.db||!S.uid)))) ?
+      el("p",{class:"note"},"Solo mode: scores are not shared between players yet, so only you can see this one.") : null,
+    el("div",{class:"acts"},
+      el("button",{class:"btn",id:"copy",onclick:async e=>{
+        const txt=`China Index 中国浓度 · Day ${DAY}: I scored ${score} (${t[1]}). ${rankText}. ${t[3]}`;
+        try{ await navigator.clipboard.writeText(txt); e.target.textContent="Copied ✓"; }
+        catch(err){ e.target.textContent="Couldn't copy. Take a screenshot instead"; }
+      }},"Copy my result as text"),
+      el("p",{class:"mono",style:"text-align:center"},"Want an image? Screenshot the card above"))
+  ];
+  // The reveal
+  const sec=el("section",{class:"sec"},el("h3",null,el("span",null,"The reveal"),el("span",{class:"mono",lang:"zh"},"答案揭秘")));
+  Q.forEach((q,i)=>{
+    const my=mine.a[i], rawMine=mine.raw&&mine.raw[i];
+    const list=[...counts[i].entries()].sort((x,y)=>y[1]-x[1]), max=list[0]?list[0][1]:1;
+    const min=list.length?list[list.length-1][1]:0;
+    let line;
+    if(my) line=`Your answer: ${my}`;
+    else if(rawMine){ const r=match(i,rawMine); line= r&&!r.ok ? `Your answer: ${r.name}. Sorry, ${r.note}. 0 points.` : `Your answer "${rawMine}" isn't on the answer list. 0 points.`; }
+    else line="No answer. 0 points.";
+    const box=el("div",{class:"qa"},
+      el("div",{class:"top"},el("strong",null,`${pad(i+1)} ${q.p}`),
+        el("span",{class:"pts"+(row.per[i]?"":" zero")},"+"+row.per[i].toFixed(1))),
+      el("p",{class:"muted",style:"font-size:14px"},line));
+    let shown=list.slice(0,6); const mi=list.findIndex(x=>x[0]===my);
+    if(mi>=6) shown=[...list.slice(0,5),list[mi]];
+    shown.forEach(([name,c],k)=>{
+      const rec=INDEX[i].get(norm(name));
+      const note=rec&&rec.note&&norm(rec.note)!==norm(name)?` (${rec.note})`:"";
+      box.append(el("div",{class:"row"+(name===my?" me":"")},
+        el("span",null,name+note,
+          n>1&&k===0&&c>min?el("span",{class:"tag"},"Most popular"):null,
+          n>1&&c===min&&c<max&&name===list[list.length-1][0]?el("span",{class:"tag"},"Rarest"):null),
+        el("span",{class:"m"},el("i",{style:`width:${Math.round(c/max*100)}%`})),
+        el("span",{class:"n"},c)));
+    });
+    if(list.length>shown.length) box.append(el("p",{class:"mono"},`+ ${list.length-shown.length} more answers`));
+    sec.append(box);
+  });
+  out.push(sec);
+  // Leaderboard
+  const lb=el("section",{class:"sec"},el("h3",null,el("span",null,"Today's leaderboard"),el("span",{class:"mono"},`${n} ${n===1?"player":"players"}`)));
+  rows.slice(0,10).forEach((r,k)=>lb.append(el("div",{class:"lb"+(r.id===me?" me":"")},
+    el("span",{class:"mono"},pad(k+1)),
+    el("span",null,r.id===me?"Me":(S.names[r.id]||"Player "+(k+1))),
+    el("span",{class:"mono"},r.score.toFixed(1)))));
+  out.push(lb);
+  // Owner only: answers the list missed
+  if(S.isOwner){
+    const unk=[]; plays.forEach(p=>(p.raw||[]).forEach((r,i)=>{ if(r) unk.push([i,String(r).slice(0,50)]); }));
+    const os=el("section",{class:"sec"},el("h3",null,el("span",null,"Answers the list missed"),el("span",{class:"mono"},"Only you see this")));
+    if(!unk.length) os.append(el("p",{class:"muted",style:"font-size:14px"},"Nothing yet. When a friend types an answer that isn't on the list, it shows up here so you can add it."));
+    unk.forEach(([i,r])=>os.append(el("div",{class:"lb"},el("span",{class:"mono"},"Q"+(i+1)),el("span",null,r),el("span",null,""))));
+    out.push(os);
+  }
+  out.push(el("button",{class:"btn ghost",onclick:()=>{S.screen="home";render();}},"Back to the start"));
+  return out;
+}
+
+async function loadNames(){
+  if(!S.user||!S.user.profiles) return;
+  const ids=[...S.plays.keys()].filter(id=>!(id in S.names)); if(!ids.length) return;
+  try{ const ps=await S.user.profiles(ids); ids.forEach(id=>{S.names[id]=(ps&&ps[id]&&ps[id].name)||"";}); if(S.screen==="result") render(); }catch(e){}
+}
+function valid(d){ return d&&d.day===DAY&&Array.isArray(d.a)&&d.a.length===Q.length; }
+
+async function connect(){
+  try{
+    const c=window.claude;
+    if(c&&c.use){
+      const [db,user]=await Promise.all([c.use("db"),c.use("user")]);
+      S.db=db; S.user=user;
+      if(user){ try{ S.uid=await user.id(); S.isOwner=!!(await user.isOwner()); }catch(e){} }
+    }
+  }catch(e){}
+  S.tried=true;
+  if(!S.db){ if(S.screen!=="play") render(); return; }
+  S.db.collection("plays").onSnapshot(snap=>{
+    const m=new Map();
+    snap.docs.forEach(d=>{ const v=d.data(); if(valid(v)) m.set(d.id,{a:v.a.map(x=>typeof x==="string"?x:""),raw:Array.isArray(v.raw)?v.raw:[],t:+v.t||0}); });
+    S.plays=m; S.online=true;
+    if(S.uid&&m.has(S.uid)){ S.mine={...m.get(S.uid),day:DAY}; S.saved=true; }
+    else if(S.mine) save();
+    loadNames();
+    if(S.screen!=="play") render();          // never interrupt a question
+  }, ()=>{ if(S.screen!=="play") render(); });
+}
+
+function start(data){
+  try{ const m=JSON.parse(localStorage.getItem(LS)||"null"); if(valid(m)) S.mine=m; }catch(e){}
+  if(data&&data.screen){ S.screen=data.screen; S.qi=data.qi||0; S.a=data.a||[]; S.raw=data.raw||[]; if(valid(data.mine)) S.mine=data.mine; }
+  if(S.screen==="result"&&!S.mine) S.screen="home";
+  render(); connect();
+}
+const hot=window.claude&&window.claude.hot;
+if(hot&&hot.snapshot) hot.snapshot(()=>({screen:S.screen,qi:S.qi,a:S.a,raw:S.raw,mine:S.mine}));
+if(hot&&hot.ready) hot.ready(start); else start((hot&&hot.data)||{});
+}
+</script>
+</body>
+</html>
