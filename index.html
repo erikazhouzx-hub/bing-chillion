@@ -28,6 +28,16 @@ h1{font-size:18px} h2{font-size:15px} h3{font-size:12px}
 .panel .lbl{color:var(--dim)}
 .lbl.gold{color:var(--gold)} .lbl.red{color:var(--red)} .lbl.soft{color:var(--soft)}
 .center{text-align:center}
+.mastr{display:flex;align-items:center;gap:10px}
+.mus{font-family:var(--px);font-size:8px;line-height:1.5;text-transform:uppercase;border:0;border-radius:0;padding:6px;cursor:pointer;background:var(--gold);color:var(--night)}
+.mus[aria-pressed="false"]{background:var(--edge);color:var(--paper)}
+.mus:focus-visible{outline:4px solid var(--jade);outline-offset:4px}
+.scene{margin:4px;line-height:0;box-shadow:0 -4px 0 0 var(--gold),0 4px 0 0 var(--gold),-4px 0 0 0 var(--gold),4px 0 0 0 var(--gold)}
+.scene canvas{width:100%;height:auto;image-rendering:pixelated}
+.pts.big{font-size:18px}
+.lbl.warn{color:#ff8a6e}
+.field{display:flex;flex-direction:column;gap:8px}
+.field input[type=text]{border-color:var(--gold)}
 /* lantern string */
 .garland{display:flex;justify-content:space-between;align-items:flex-start;border-top:4px solid #6b4a2b;padding:0 6px;height:86px}
 .lan{padding-top:var(--h);background:linear-gradient(#6b4a2b,#6b4a2b) top center/3px var(--h) no-repeat;transform-origin:top center;animation:sway 1.6s steps(2,end) infinite alternate}
@@ -170,9 +180,18 @@ if(typeof module!=="undefined") module.exports={norm,match,compute,rarity,tierOf
 if(typeof document!=="undefined"){
 const app=document.getElementById("app");
 const S={screen:"home", qi:0, a:[], raw:[], mine:null, plays:new Map(), uid:null, db:null, user:null,
-         online:false, tried:false, saved:false, saveFailed:false, names:{}, isOwner:false};
+         online:false, tried:false, saved:false, saveFailed:false, saving:false, nick:"", nickErr:false, sig:"", per:[], turn:null, music:true};
 let timer=null, deadline=0;
-const LOCAL_ID="me-local", LS="china-index-en-"+DAY;
+const LOCAL_ID="me-local", LS="china-index-v2-"+DAY;
+// Shared scoreboard (Supabase). The publishable key is meant to be public.
+const SB_URL="https://oeglexmbwrjrwkokrpnl.supabase.co", SB_KEY="sb_publishable_ngeKhH39R_V0wKZNRRK27Q_bXkYWiT4";
+const HEAD={apikey:SB_KEY, Authorization:"Bearer "+SB_KEY, "Content-Type":"application/json"};
+const OKSET=INDEX.map(m=>new Set([...m.values()].filter(r=>r.ok).map(r=>r.name)));   // answers that count
+function playerId(){ // a random id kept in this browser, so one person = one play per day
+  const make=()=>(window.crypto&&crypto.randomUUID)?crypto.randomUUID():"p"+Date.now().toString(36)+Math.random().toString(36).slice(2,12);
+  try{ let id=localStorage.getItem("china-index-player"); if(!id){ id=make(); localStorage.setItem("china-index-player",id); } return id; }
+  catch(e){ return make(); }
+}
 const pad=n=>String(n).padStart(2,"0");
 
 function el(tag, attrs, ...kids){
@@ -224,7 +243,81 @@ function pixelText(text, size, color, scale, shadow){
 const seal=chars=>el("div",{class:"seal"},pixelText(chars,18,"#fff3d6",2));
 const garland=()=>el("div",{class:"garland","aria-hidden":"true"},
   [6,24,12,28,4].map((h,i)=>el("div",{class:"lan",style:`--h:${h}px;animation-delay:${-i*0.5}s`},sprite("lantern",3))));
-const mast=right=>el("header",{class:"mast"},pixelText("中国浓度",18,"#fff3d6",1),el("span",{class:"lbl gold"},right));
+const mast=right=>el("header",{class:"mast"},pixelText("中国浓度",18,"#fff3d6",1),
+  el("div",{class:"mastr"},el("span",{class:"lbl gold"},right),
+    el("button",{class:"mus",id:"mus","aria-pressed":String(S.music),onclick:toggleMusic},S.music?"Music on":"Music off")));
+
+// ---- The Great Wall climb. 100 points = one watchtower. 7 questions = 7 towers = 700 steps. ----
+const NODES=[[6,66],[20,60],[34,55],[48,47],[62,42],[76,33],[92,26],[110,14]];   // start + 7 towers, in scene pixels
+function wallY(x){
+  for(let i=0;i<NODES.length-1;i++){ const [x0,y0]=NODES[i],[x1,y1]=NODES[i+1]; if(x>=x0&&x<=x1) return y0+(y1-y0)*(x-x0)/(x1-x0); }
+  return x<NODES[0][0]?NODES[0][1]:NODES[NODES.length-1][1];
+}
+function drawWall(c,p,frame){ // p = towers climbed so far (0 to 7)
+  const W=120,H=76,px=(col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(x,y,w||1,h||1);};
+  px("#1a1330",0,0,W,H); px("#231a44",0,20,W,H); px("#2c2154",0,36,W,H);                       // night sky
+  [[30,6],[52,12],[70,5],[88,10],[104,4],[42,22],[8,26],[60,26]].forEach(([x,y])=>px("#b9add9",x,y));
+  px("#ffe08a",13,7,8,6); px("#ffe08a",14,6,6,8);                                               // moon
+  for(let x=0;x<W;x++){ const h=Math.round(9+8*Math.abs(Math.sin(x/17))+5*Math.abs(Math.sin(x/7+1))); px("#3a2c6b",x,50-h,1,H); }   // far mountains
+  for(let x=0;x<W;x++){ const y=Math.round(wallY(x)); px("#1f4a3d",x,y+3,1,H); px("#183b31",x,y+13,1,H); px("#112b25",x,y+26,1,H); } // the ridge
+  for(let x=NODES[0][0];x<W;x++){ const y=Math.round(wallY(x)); px("#bfa98a",x,y,1,3); px("#7d6a55",x,y+3); if(x%3!==2) px("#e0cfae",x,y-1); } // the wall
+  px("#bfa98a",3,61,7,8); px("#5c4a3a",5,65,3,4); px("#d7261e",3,60,7,1);                        // start gate
+  NODES.slice(1).forEach(([tx,ty],i)=>{ const lit=p>=i+1-1e-6;                                   // watchtowers
+    px("#cdb893",tx-3,ty-7,7,10); px("#e0cfae",tx-4,ty-8,9,1); [-4,-2,0,2,4].forEach(d=>px("#e0cfae",tx+d,ty-9));
+    px(lit?"#f2b632":"#5c4a3a",tx-1,ty-5,2,2); px("#5c4a3a",tx-1,ty,2,3);
+    if(lit){ px("#6b4a2b",tx,ty-14,1,5); px("#d7261e",tx+1,ty-14,3,2); } });
+  const seg=Math.min(Math.floor(p+1e-6),6), f=Math.min(p-seg,1);                                 // the climber
+  const x=Math.round(NODES[seg][0]+(NODES[seg+1][0]-NODES[seg][0])*f);
+  let y=Math.round(wallY(x))-1;
+  NODES.slice(1).forEach(([tx,ty])=>{ if(Math.abs(x-tx)<=4) y=ty-9; });
+  px("#f2b632",x-1,y-5,3,1); px("#ffd9a8",x,y-4); px("#d7261e",x-1,y-3,3,2);
+  if(frame%2){ px("#1d1424",x-1,y-1); px("#1d1424",x+1,y-1); } else { px("#1d1424",x,y-1); }
+}
+function wallScene(from,to){ // a picture of the climb; walks from "from" to "to"
+  const cv=document.createElement("canvas"); cv.width=120; cv.height=76;
+  cv.setAttribute("role","img"); cv.setAttribute("aria-label",`Great Wall climb: ${Math.round(to*100)} of 700 steps`);
+  const c=cv.getContext("2d"), still=from===to||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if(still){ drawWall(c,to,0); }
+  else{ const t0=performance.now(), dur=500+900*Math.abs(to-from); let last=-1;
+    const tick=now=>{ if(!cv.isConnected&&now-t0>200) return;
+      const k=Math.min((now-t0)/dur,1), fr=Math.floor((now-t0)/120);
+      if(fr!==last||k===1){ last=fr; drawWall(c,from+(to-from)*k,k===1?0:fr); }
+      if(k<1) requestAnimationFrame(tick); };
+    drawWall(c,from,0); requestAnimationFrame(tick); }
+  return el("div",{class:"scene"},cv);
+}
+
+// ---- Background music: an original festive loop, made by the browser (no audio file). ----
+const Music=(()=>{
+  const F={G2:98,A2:110,C3:130.81,D3:146.83,G4:392,A4:440,C5:523.25,D5:587.33,E5:659.25,G5:783.99,A5:880,C6:1046.5};
+  const LEAD=["E5 G5 A5 G5 E5 D5 C5 -","D5 E5 G5 E5 D5 C5 A4 -","E5 G5 A5 C6 A5 G5 E5 -","C5 A4 G4 A4 C5 - C5 -",
+              "C5 D5 E5 G5 A5 G5 E5 D5","D5 E5 G5 E5 D5 C5 A4 -","G4 A4 C5 D5 E5 D5 C5 A4","G4 - C5 - C5 - - -"].join(" ").split(" ");
+  const BASS=["C3","A2","C3","G2","C3","A2","D3","C3"], E=0.19;
+  let ac=null,out=null,noise=null,id=null,step=0,nextT=0;
+  function tone(f,t,d,type,v){ const o=ac.createOscillator(),g=ac.createGain(); o.type=type; o.frequency.value=f;
+    g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(0.001,t+d); o.connect(g); g.connect(out); o.start(t); o.stop(t+d+0.02); }
+  function tick(t){ const g=ac.createGain(),s=ac.createBufferSource(),hp=ac.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=6000;
+    s.buffer=noise; g.gain.setValueAtTime(0.05,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.05); s.connect(hp); hp.connect(g); g.connect(out); s.start(t); s.stop(t+0.06); }
+  function plan(){ while(nextT<ac.currentTime+0.3){ const n=LEAD[step], bar=Math.floor(step/8), beat=step%8;
+      if(n!=="-"){ tone(F[n],nextT,E*0.95,"square",0.10); tone(F[n]/2,nextT,E*0.6,"square",0.03); }
+      if(beat%4===0) tone(F[BASS[bar]],nextT,E*1.8,"triangle",0.22);
+      if(beat%2===1) tick(nextT);
+      nextT+=E; step=(step+1)%LEAD.length; } }
+  return {
+    start(){ try{
+        if(!ac){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; ac=new AC();
+          out=ac.createGain(); out.gain.value=0.5; out.connect(ac.destination);
+          noise=ac.createBuffer(1,2205,22050); const d=noise.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; }
+        ac.resume(); if(id) return; nextT=ac.currentTime+0.06; id=setInterval(plan,60); }catch(e){} },
+    stop(){ try{ if(id){ clearInterval(id); id=null; } if(ac) ac.suspend(); }catch(e){} }
+  };
+})();
+function toggleMusic(){
+  S.music=!S.music;
+  try{ localStorage.setItem("china-index-music",S.music?"on":"off"); }catch(e){}
+  if(S.music) Music.start(); else Music.stop();
+  const b=document.getElementById("mus"); if(b){ b.textContent=S.music?"Music on":"Music off"; b.setAttribute("aria-pressed",String(S.music)); }
+}
 function stars(){ // a small tile of pixel stars behind everything
   try{ const c=document.createElement("canvas"); c.width=c.height=120; const x=c.getContext("2d");
     [[8,14,"#4a3a80"],[52,6,"#4a3a80"],[96,30,"#b9add9"],[30,58,"#4a3a80"],[76,70,"#4a3a80"],[110,96,"#4a3a80"],[14,100,"#f2b632"]]
@@ -241,12 +334,27 @@ const myId=()=> (S.uid && S.plays.has(S.uid)) ? S.uid : LOCAL_ID;
 
 function render(){
   clearInterval(timer);
-  app.replaceChildren(garland(), ...(S.screen==="play"?viewPlay():S.screen==="result"?viewResult():viewHome()));
+  const typing=document.activeElement&&document.activeElement.id==="nick";
+  app.replaceChildren(garland(), ...(S.screen==="play"?viewPlay():S.screen==="turn"?viewTurn():S.screen==="result"?viewResult():viewHome()).filter(Boolean));
+  if(S.screen==="turn"){ const b=document.getElementById("next"); if(b) b.focus({preventScroll:true}); window.scrollTo(0,0); }
   if(S.screen==="play") startTimer();
+  if(typing){ const n=document.getElementById("nick"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } }
+}
+function begin(){
+  if(S.mine){ S.screen="result"; render(); return; }
+  const name=S.nick.trim().slice(0,20);
+  if(!name){ S.nickErr=true; render(); const n=document.getElementById("nick"); if(n) n.focus(); return; }
+  S.nick=name; S.nickErr=false;
+  try{ localStorage.setItem("china-index-nick",name); }catch(e){}
+  S.screen="play"; S.qi=0; S.a=[]; S.raw=[]; S.per=[]; render();
 }
 
 function viewHome(){
   const n=S.plays.size;
+  const nick=el("input",{type:"text",id:"nick",maxlength:"20",autocomplete:"nickname",placeholder:"e.g. Baozi Boss"});
+  nick.value=S.nick;
+  nick.addEventListener("input",e=>{ S.nick=e.target.value; if(S.nickErr){ S.nickErr=false; const w=document.getElementById("nickwarn"); if(w) w.remove(); } });
+  nick.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.isComposing) begin(); });
   return [
     mast("Day "+DAY),
     el("section",{class:"panel"},
@@ -254,10 +362,13 @@ function viewHome(){
       el("span",{class:"lbl red"},"China Index · Today's challenge"),
       el("h1",null,"How deep does your China go?"),
       el("p",null,`${Q.length} questions. ${SECS} seconds each. The fewer people share your answer, the more you score.`)),
-    el("button",{class:"btn",id:"start",onclick:()=>{ if(S.mine){S.screen="result";} else {S.screen="play";S.qi=0;S.a=[];S.raw=[];} render(); }},
-      S.mine?"See my result >":"Start the challenge >"),
+    S.mine?null:el("div",{class:"field"},
+      el("label",{class:"lbl gold",for:"nick"},"Your nickname (shown on the leaderboard)"),
+      nick,
+      S.nickErr?el("p",{class:"lbl warn",id:"nickwarn",role:"alert"},"Type a nickname first"):null),
+    el("button",{class:"btn",id:"start",onclick:begin}, S.mine?"See my result >":"Start the challenge >"),
     el("p",{class:"lbl soft center"}, S.online ? `${n} ${n===1?"player has":"players have"} finished today` :
-        S.tried ? "Solo mode: shared scores are coming soon" : "Connecting to the leaderboard…"),
+        S.tried ? "Can't reach the leaderboard. You can still play" : "Connecting to the leaderboard…"),
     el("div",{class:"cats"},Q.map((q,i)=>el("div",{class:"cat"},el("div",{class:"tile"},sprite(ICONS[i],3)),el("span",null,q.c)))),
     el("ol",{class:"rules"},
       el("li",null,el("span",{class:"lbl gold"},"01"),el("span",null,"One answer per question. No changes after you submit.")),
@@ -299,21 +410,80 @@ function startTimer(){
 function submit(){
   clearInterval(timer);
   const raw=(document.getElementById("answer")?.value||"").trim().slice(0,50);
-  const rec=match(S.qi,raw);
-  S.a[S.qi]= rec&&rec.ok ? rec.name : "";
-  S.raw[S.qi]= rec&&rec.ok ? "" : raw;        // keep unknown answers so the owner can review them
-  if(S.qi<Q.length-1){ S.qi++; render(); } else finish();
+  const rec=match(S.qi,raw), ok=!!(rec&&rec.ok);
+  S.a[S.qi]= ok ? rec.name : "";
+  S.raw[S.qi]= ok ? "" : raw;                 // unknown answers are kept for the owner's "misses" table
+  let others=0;                               // how many other players gave this same answer so far
+  if(ok) S.plays.forEach((p,id)=>{ if(id!==S.uid && p.a[S.qi]===rec.name) others++; });
+  const before=S.per.reduce((x,y)=>x+y,0), pts= ok ? rarity(others+1) : 0;
+  S.per[S.qi]=pts;
+  S.turn={qi:S.qi, ok, raw, pts, others, before, name: rec?rec.name:raw, note: rec?rec.note:""};
+  S.screen="turn"; render();
 }
+function viewTurn(){ // the score for this answer, and the climb so far
+  const t=S.turn, total=t.before+t.pts, last=t.qi===Q.length-1;
+  let line;
+  if(t.ok) line= t.others===0 ? (S.online?"Nobody else has said this yet. Full points!":"Full points for now. Other players' answers can't be reached right now.")
+                              : `${t.others} other ${t.others===1?"player":"players"} said this too.`;
+  else if(t.note) line=`Sorry, ${t.note}. No points.`;
+  else if(t.raw) line="That isn't on the answer list. No points.";
+  else line="Time ran out. No points.";
+  const zh= t.ok && t.note && norm(t.note)!==norm(t.name) ? t.note : "";
+  return [
+    mast("Day "+DAY),
+    wallScene(t.before/100,total/100),
+    el("section",{class:"panel"},
+      el("div",{class:"row2"},el("span",{class:"lbl"},`Question ${pad(t.qi+1)} / ${pad(Q.length)}`),
+        el("span",{class:"pts big"+(t.pts?"":" zero")},"+"+t.pts.toFixed(1))),
+      el("h2",null, t.ok||t.note ? t.name : (t.raw?`"${t.raw}"`:"No answer")),
+      zh?el("p",null,zh):null,
+      el("p",null,line+(t.ok?" Points can still change as more people play.":"")),
+      el("div",{class:"rank"},el("span",{class:"lbl"},"Climbed so far"),el("strong",null,`${Math.round(total)} / 700 steps`)),
+      el("button",{class:"btn",id:"next",onclick:nextTurn}, last?"See my result >":"Next question >"))
+  ];
+}
+function nextTurn(){ if(S.qi<Q.length-1){ S.qi++; S.screen="play"; render(); } else finish(); }
 function finish(){
-  S.mine={v:1,day:DAY,a:S.a.slice(),raw:S.raw.slice(),t:Date.now()};
+  S.mine={v:2,day:DAY,a:S.a.slice(),raw:S.raw.slice(),t:Date.now(),name:S.nick.trim().slice(0,20)||"Player"};
   try{ localStorage.setItem(LS,JSON.stringify(S.mine)); }catch(e){}
   S.screen="result"; render(); save();
 }
-async function save(){
-  if(!S.db||!S.uid||!S.mine||S.saved||S.plays.has(S.uid)) return;
-  try{ await S.db.doc("plays/"+S.uid).set(S.mine); S.saved=true; }
-  catch(e){ S.saveFailed=true; }
-  if(S.screen==="result") render();
+async function save(){ // put my play on the shared scoreboard
+  if(!S.mine||S.saved||S.saving) return;
+  S.saving=true;
+  try{
+    const r=await fetch(SB_URL+"/rest/v1/plays",{method:"POST",headers:{...HEAD,Prefer:"return=minimal"},
+      body:JSON.stringify({day:DAY,player:S.uid,nickname:S.mine.name||"Player",answers:S.mine.a})});
+    if(r.ok||r.status===409){ S.saved=true; S.saveFailed=false; sendMisses(); }   // 409 = already saved
+    else S.saveFailed=true;
+  }catch(e){ S.saveFailed=true; }
+  S.saving=false;
+  if(S.saved) load(); else if(S.screen==="result") render();
+}
+function sendMisses(){ // answers the list didn't know go to a private table for the owner
+  try{ if(localStorage.getItem(LS+"-misses")) return; localStorage.setItem(LS+"-misses","1"); }catch(e){}
+  const rows=(S.mine.raw||[]).map((r,i)=>r?{day:DAY,question:i+1,answer:String(r).slice(0,50)}:null).filter(Boolean);
+  if(rows.length) fetch(SB_URL+"/rest/v1/misses",{method:"POST",headers:{...HEAD,Prefer:"return=minimal"},body:JSON.stringify(rows)}).catch(()=>{});
+}
+async function load(){ // read everyone's plays for today
+  let sig=S.sig;
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/plays?day=eq.${DAY}&select=player,nickname,answers,created_at&order=created_at.asc&limit=1000`,{headers:HEAD});
+    if(!r.ok) throw new Error("load failed");
+    const rows=await r.json(), m=new Map();
+    rows.forEach(v=>{
+      if(!v||!Array.isArray(v.answers)||v.answers.length!==Q.length) return;
+      m.set(String(v.player),{a:v.answers.map((x,i)=>typeof x==="string"&&OKSET[i].has(x)?x:""),raw:[],
+        t:Date.parse(v.created_at)||0,name:String(v.nickname||"").slice(0,20)});
+    });
+    S.plays=m; S.online=true;
+    if(m.has(S.uid)){ S.saved=true; S.saveFailed=false; if(!S.mine) S.mine={day:DAY,...m.get(S.uid)}; }
+    else if(S.mine) save();
+    sig="on:"+[...m.keys()].join(",")+":"+S.saved;
+  }catch(e){ S.online=false; sig="off"; }
+  const first=!S.tried; S.tried=true;
+  if((first||sig!==S.sig) && (S.screen==="home"||S.screen==="result")) { S.sig=sig; render(); }   // never interrupt a question
+  S.sig=sig;
 }
 
 function viewResult(){
@@ -321,20 +491,23 @@ function viewResult(){
   const idx=rows.findIndex(r=>r.id===me), row=rows[idx], mine=plays.find(p=>p.id===me);
   const t=tierOf(row.score), n=rows.length, score=row.score.toFixed(1);
   const rankText= n>1 ? `No. ${idx+1} of ${n}` : "First player in";
+  const steps=Math.round(row.score*Q.length), towers=Math.floor(steps/100+1e-6);
   const out=[ mast("Day "+DAY),
+    wallScene(steps/100,steps/100),
     el("section",{class:"panel"},
       el("div",{class:"row2"},el("span",{class:"lbl"},"My China concentration"),seal(t[2])),
       el("div",{class:"score"},score),
       el("h2",null,t[1]),
       el("p",null,t[3]),
+      el("div",{class:"rank"},el("span",{class:"lbl"},"Great Wall climb"),el("strong",null,`${steps} / 700 steps · ${towers} of 7 towers`)),
       el("div",{class:"rank"},el("span",{class:"lbl"},"Today's rank"),el("strong",null,rankText))),
     el("p",{class:"note"}, n<5 ? "Only a few people have played, so scores run high. As more friends play, scores update by themselves."
         : "This score is provisional. It updates as more people play."),
-    (me===LOCAL_ID && (S.saveFailed||(S.tried&&(!S.db||!S.uid)))) ?
-      el("p",{class:"note"},"Solo mode: scores are not shared between players yet, so only you can see this one.") : null,
+    (me===LOCAL_ID && S.tried && (S.saveFailed||!S.online)) ?
+      el("p",{class:"note"},"Your score isn't on the leaderboard yet. Keep this page open; it will try again by itself.") : null,
     el("div",{class:"acts"},
       el("button",{class:"btn",id:"copy",onclick:async e=>{
-        const txt=`China Index 中国浓度 · Day ${DAY}: I scored ${score} (${t[1]}). ${rankText}. ${t[3]}`;
+        const txt=`China Index 中国浓度 · Day ${DAY}: I scored ${score} (${t[1]}) and climbed ${steps} of 700 steps up the Great Wall. ${rankText}.`;
         try{ await navigator.clipboard.writeText(txt); e.target.textContent="Copied!"; }
         catch(err){ e.target.textContent="Couldn't copy. Screenshot instead"; }
       }},"Copy my result as text"),
@@ -374,60 +547,27 @@ function viewResult(){
   const board=el("div",{class:"panel qa"});
   rows.slice(0,10).forEach((r,k)=>board.append(el("div",{class:"lb"+(r.id===me?" me":"")},
     el("span",{class:"lbl"},pad(k+1)),
-    el("span",null,r.id===me?"Me":(S.names[r.id]||"Player "+(k+1))),
+    el("span",null,r.id===me?((S.mine.name||"Me")+" (you)"):((S.plays.get(r.id)||{}).name||"Player "+(k+1))),
     el("span",{class:"lbl"},r.score.toFixed(1)))));
   out.push(el("section",{class:"sec"},el("h3",null,el("span",null,"Leaderboard"),el("span",{class:"lbl gold"},`${n} ${n===1?"player":"players"}`)),board));
-  // Owner only: answers the list missed
-  if(S.isOwner){
-    const unk=[]; plays.forEach(p=>(p.raw||[]).forEach((r,i)=>{ if(r) unk.push([i,String(r).slice(0,50)]); }));
-    const box=el("div",{class:"panel qa"});
-    if(!unk.length) box.append(el("p",{style:"font-size:15px"},"Nothing yet. When a friend types an answer that isn't on the list, it shows up here so you can add it."));
-    unk.forEach(([i,r])=>box.append(el("div",{class:"lb"},el("span",{class:"lbl"},"Q"+(i+1)),el("span",null,r),el("span",null,""))));
-    out.push(el("section",{class:"sec"},el("h3",null,el("span",null,"Missed answers"),el("span",{class:"lbl gold"},"Only you see this")),box));
-  }
   out.push(el("button",{class:"btn ghost",onclick:()=>{S.screen="home";render();}},"Back to the start"));
   return out;
 }
 
-async function loadNames(){
-  if(!S.user||!S.user.profiles) return;
-  const ids=[...S.plays.keys()].filter(id=>!(id in S.names)); if(!ids.length) return;
-  try{ const ps=await S.user.profiles(ids); ids.forEach(id=>{S.names[id]=(ps&&ps[id]&&ps[id].name)||"";}); if(S.screen==="result") render(); }catch(e){}
-}
 function valid(d){ return d&&d.day===DAY&&Array.isArray(d.a)&&d.a.length===Q.length; }
 
-async function connect(){
-  try{
-    const c=window.claude;
-    if(c&&c.use){
-      const [db,user]=await Promise.all([c.use("db"),c.use("user")]);
-      S.db=db; S.user=user;
-      if(user){ try{ S.uid=await user.id(); S.isOwner=!!(await user.isOwner()); }catch(e){} }
-    }
-  }catch(e){}
-  S.tried=true;
-  if(!S.db){ if(S.screen!=="play") render(); return; }
-  S.db.collection("plays").onSnapshot(snap=>{
-    const m=new Map();
-    snap.docs.forEach(d=>{ const v=d.data(); if(valid(v)) m.set(d.id,{a:v.a.map(x=>typeof x==="string"?x:""),raw:Array.isArray(v.raw)?v.raw:[],t:+v.t||0}); });
-    S.plays=m; S.online=true;
-    if(S.uid&&m.has(S.uid)){ S.mine={...m.get(S.uid),day:DAY}; S.saved=true; }
-    else if(S.mine) save();
-    loadNames();
-    if(S.screen!=="play") render();          // never interrupt a question
-  }, ()=>{ if(S.screen!=="play") render(); });
-}
-
-function start(data){
+function start(){
   stars();
   try{ const m=JSON.parse(localStorage.getItem(LS)||"null"); if(valid(m)) S.mine=m; }catch(e){}
-  if(data&&data.screen){ S.screen=data.screen; S.qi=data.qi||0; S.a=data.a||[]; S.raw=data.raw||[]; if(valid(data.mine)) S.mine=data.mine; }
-  if(S.screen==="result"&&!S.mine) S.screen="home";
-  render(); connect();
+  try{ S.nick=localStorage.getItem("china-index-nick")||""; S.music=localStorage.getItem("china-index-music")!=="off"; }catch(e){}
+  document.addEventListener("pointerdown",e=>{ if(S.music && !(e.target&&e.target.id==="mus")) Music.start(); },{once:true});   // browsers only allow sound after a tap
+  document.addEventListener("visibilitychange",()=>{ if(document.hidden) Music.stop(); else if(S.music) Music.start(); });
+  S.uid=playerId();
+  render(); load();
+  setInterval(()=>{ if(S.screen!=="play" && !document.hidden) load(); }, 20000);   // refresh the scores every 20 seconds
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden && S.screen!=="play") load(); });
 }
-const hot=window.claude&&window.claude.hot;
-if(hot&&hot.snapshot) hot.snapshot(()=>({screen:S.screen,qi:S.qi,a:S.a,raw:S.raw,mine:S.mine}));
-if(hot&&hot.ready) hot.ready(start); else start((hot&&hot.data)||{});
+start();
 }
 </script>
 </body>
